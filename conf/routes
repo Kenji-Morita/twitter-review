@@ -1,0 +1,54 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Static page
+GET           /                                         controllers.Application.index
+
+# PreFlight
+OPTIONS     /*all                                       controllers.CommonController.preFlight(all: String)
+
+# Auth
+POST        /api/auth/signup                            controllers.api.AuthController.signUp
+GET         /api/auth/confirm/:memberId/:hash           controllers.api.AuthController.confirm(memberId: String, hash: String)
+POST        /api/auth/signin                            controllers.api.AuthController.signIn
+POST        /api/auth/signout                           controllers.api.AuthController.signOut
+### DELETE      /api/auth/withdrawal                       controllers.api.AuthController.withdrawal
+
+# Member
+### GET         /api/member/detail/:memberId                controllers.api.MemberController.detail(memberId: String)
+### GET         /api/member/following                       controllers.api.MemberController.following
+POST        /api/member/follow/:memberId                controllers.api.MemberController.follow(memberId: String)
+DELETE      /api/member/unfollow/:memberId              controllers.api.MemberController.unFollow(memberId: String)
+
+# Timeline
+GET         /api/timeline/home                          controllers.api.TimelineController.home
+### GET         /api/timeline/member/:memberId              controllers.api.TimelineController.member(id: String)
+### GET         /api/timeline/search                        controllers.api.TimelineController.search
+
+# Tweet
+GET         /api/tweet/detail/:tweetId                  controllers.api.TweetController.detail(tweetId: String)
+POST        /api/tweet/tweet                            controllers.api.TweetController.tweet
+POST        /api/tweet/reply/:tweetId                   controllers.api.TweetController.reply(tweetId: String)
+### POST        /api/tweet/favorite/:tweetId                controllers.api.TweetController.favorite(tweetId: String)
+POST        /api/tweet/retweet/:tweetId                 controllers.api.TweetController.reTweet(tweetId: String)
+DELETE      /api/tweet/delete/:tweetId                  controllers.api.TweetController.delete(tweetId: String)
+
+# Setting
+### POST        /api/setting/icon                           controllers.api.SettingController.icon
+### POST        /api/setting/name                           controllers.api.SettingController.name
+### POST        /api/setting/biography                      controllers.api.SettingController.biography
+
+# Notify
+### GET         /api/notify/news                            controllers.api.NotifyController.news
+### GET         /api/notify/list                            controllers.api.NotifyController.list
+### POST        /api/notify/read                            controllers.api.NotifyController.read
+
+# Sandbox
+GET         /api/sandbox/get                            controllers.api.SandboxController.get
+GET         /api/sandbox/auth                           controllers.api.SandboxController.auth
+POST        /api/sandbox/post                           controllers.api.SandboxController.post
+DELETE      /api/sandbox/delete                         controllers.api.SandboxController.delete
+
+# Map static resources from the /public folder to the /assets URL path
+GET         /assets/*file                               controllers.Assets.versioned(path="/public", file: Asset)
