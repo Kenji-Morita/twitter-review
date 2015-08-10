@@ -2,11 +2,16 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-# Static page
-GET           /                                         controllers.Application.index
-
 # PreFlight
 OPTIONS     /*all                                       controllers.CommonController.preFlight(all: String)
+
+# Front
+GET         /                                           controllers.FrontController.index
+GET         /tweet/:tweetId                             controllers.FrontController.tweet(tweetId: String)
+GET         /member/:memberId                           controllers.FrontController.member(memberId: String)
+GET         /following/:memberId                        controllers.FrontController.following(memberId: String)
+GET         /followers/:memberId                        controllers.FrontController.followers(memberId: String)
+GET         /setting                                    controllers.FrontController.setting
 
 # Auth
 POST        /api/auth/signup                            controllers.api.AuthController.signUp
@@ -35,20 +40,20 @@ POST        /api/tweet/retweet/:tweetId                 controllers.api.TweetCon
 DELETE      /api/tweet/delete/:tweetId                  controllers.api.TweetController.delete(tweetId: String)
 
 # Setting
-### POST        /api/setting/icon                           controllers.api.SettingController.icon
-### POST        /api/setting/name                           controllers.api.SettingController.name
-### POST        /api/setting/biography                      controllers.api.SettingController.biography
+### PUT         /api/setting/icon                           controllers.api.SettingController.icon
+### PUT         /api/setting/name                           controllers.api.SettingController.name
+### PUT         /api/setting/biography                      controllers.api.SettingController.biography
 
 # Notify
 ### GET         /api/notify/news                            controllers.api.NotifyController.news
-### GET         /api/notify/list                            controllers.api.NotifyController.list
-### POST        /api/notify/read                            controllers.api.NotifyController.read
+### GET         /api/notify/read                            controllers.api.NotifyController.read
+
+# Resource
+GET         /assets/icon/:iconId                        controllers.ResourceController.icon(iconId: String)
+GET         /assets/*file                               controllers.Assets.versioned(path="/public", file: Asset)
 
 # Sandbox
 GET         /api/sandbox/get                            controllers.api.SandboxController.get
 GET         /api/sandbox/auth                           controllers.api.SandboxController.auth
 POST        /api/sandbox/post                           controllers.api.SandboxController.post
 DELETE      /api/sandbox/delete                         controllers.api.SandboxController.delete
-
-# Map static resources from the /public folder to the /assets URL path
-GET         /assets/*file                               controllers.Assets.versioned(path="/public", file: Asset)

@@ -16,7 +16,7 @@ class MemberController extends Controller {
     implicit request => MemberModel.findById(memberId) match {
       case None => BadRequest(CommonJson().create(MemberNotFound))
       case target => {
-        val loginMember: Member = getSessionUser(request)
+        val loginMember: Member = getSessionUser(request).get
         loginMember.checkAlreadyFollowing(memberId) match {
           case true => BadRequest(CommonJson().create(Followed))
           case _ => {
@@ -32,7 +32,7 @@ class MemberController extends Controller {
     implicit request => MemberModel.findById(memberId) match {
       case None => BadRequest(CommonJson().create(MemberNotFound))
       case target => {
-        val loginMember: Member = getSessionUser(request)
+        val loginMember: Member = getSessionUser(request).get
         loginMember.checkAlreadyFollowing(memberId) match {
           case false => BadRequest(CommonJson().create(UnFollowed))
           case _ => {

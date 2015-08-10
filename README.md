@@ -8,4 +8,4 @@
 2. 導入手順
 
   1. Elasticsearchをlocalhost:9200, クラスター名"SAW"で接続できるように
-  2. replacescheme.shを実行
+  2. replace_scheme.shを実行

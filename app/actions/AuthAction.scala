@@ -12,7 +12,7 @@ import scala.concurrent.Future
  */
 object AuthAction extends ActionBuilder[Request] {
 
-  def getSessionUser[A](request: Request[A]): Member = request.session.get("memberId").flatMap (id => MemberModel.findById(id)).get
+  def getSessionUser[A](request: Request[A]): Option[Member] = request.session.get("memberId").flatMap (id => MemberModel.findById(id))
 
   override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]): Future[Result] = request.session.get("memberId") match {
     case memberId if !memberId.isEmpty => block.apply(request)

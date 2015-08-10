@@ -24,7 +24,7 @@ class TweetController extends Controller {
 
   def tweet = AuthAction(parse.json) {
     implicit request =>
-      val loginMember: Member = getSessionUser(request)
+      val loginMember: Member = getSessionUser(request).get
       val textOpt = extractJsValue(request, "text")
       textOpt match {
         case None => BadRequest(CommonJson().create(TextIsEmpty))
@@ -44,7 +44,7 @@ class TweetController extends Controller {
       TweetModel.findById(tweetId) match {
         case None => BadRequest(CommonJson().create(TweetNotFound))
         case targetTweet => {
-          val loginMember: Member = getSessionUser(request)
+          val loginMember: Member = getSessionUser(request).get
           val textOpt = extractJsValue(request, "text")
           textOpt match {
             case None => BadRequest(CommonJson().create(TextIsEmpty))
@@ -75,7 +75,7 @@ class TweetController extends Controller {
 
   def delete(tweetId: String) = AuthAction {
     implicit request =>
-      val loginMember: Member = getSessionUser(request)
+      val loginMember: Member = getSessionUser(request).get
       TweetModel.findById(tweetId) match {
         case None => BadRequest(CommonJson().create(TweetNotFound))
         case targetTweet if targetTweet.get.memberId != loginMember.memberId => BadRequest(CommonJson().create(TweetIsNotYours))

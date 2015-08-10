@@ -18,11 +18,6 @@ import scala.concurrent.{Await, Future}
 case class Member(memberId: String, screenName: String, password: String) {
 
   // ===================================================================================
-  //                                                                          Attributes
-  //                                                                          ==========
-  val isValid: Boolean = memberId.nonEmpty
-
-  // ===================================================================================
   //                                                                               Match
   //                                                                               =====
   def isMatch(password: String): Boolean = this.password == crypt(password)
@@ -37,11 +32,30 @@ case class Member(memberId: String, screenName: String, password: String) {
   // ===================================================================================
   //                                                                                Find
   //                                                                                ====
+  def findProfile: Option[Profile] = ElasticsearchUtil.process { client =>
+    val futureSearching: Future[GetResponse] = client.execute(get id memberId from "twitter/member")
+    Await.result(futureSearching, Duration.Inf) match {
+      case r if !r.isExists => None
+      case r => {
+        val source = r.getSource
+        val profile = source.get("profile").asInstanceOf[util.HashMap[String, Any]]
+        Some(Profile(profile.get("iconId").asInstanceOf[String], profile.get("biography").asInstanceOf[String]))
+      }
+    }
+  }
+
   def findFollowingMemberIds: List[String] = ElasticsearchUtil.process { client =>
     val futureSearching: Future[SearchResponse] = client.execute(search in "twitter/follow" query {
       matches ("followFromId", memberId)
     })
     memberId :: Await.result(futureSearching, Duration.Inf).getHits.getHits.map(_.getSource.get("followToId").asInstanceOf[String]).toList
+  }
+
+  def findFollowersMemberIds: List[String] = ElasticsearchUtil.process { client =>
+    val futureSearching: Future[SearchResponse] = client.execute(search in "twitter/follow" query {
+      matches ("followToId", memberId)
+    })
+    memberId :: Await.result(futureSearching, Duration.Inf).getHits.getHits.map(_.getSource.get("followFromId").asInstanceOf[String]).toList
   }
 
   // ===================================================================================
@@ -72,6 +86,8 @@ case class Member(memberId: String, screenName: String, password: String) {
     client.execute(delete id targetFollowingId from "twitter/follow")
   }
 }
+
+case class Profile(iconId: String, biography: String)
 
 /**
  * @author SAW

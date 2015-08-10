@@ -1,0 +1,38 @@
+@(loginMember: Option[Member])
+@profile = @{loginMember.get.findProfile.get}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>SAW Twitter</title>
+    <link href="assets/stylesheets/normalize.css" rel="stylesheet" />
+    <script src="assets/javascripts/superagent.js"></script>
+    <script src="assets/javascripts/riot.min.js"></script>
+    <script src="assets/javascripts/tag.min.js"></script>
+</head>
+<body>
+<commonheader></commonheader>
+<div class="sg-container">
+    <aside class="pg-profile">
+        <img src="assets/icon/1@{profile.iconId}">
+        <h2>@{loginMember.get.screenName}</h2>
+        <p>@{profile.biography}</p>
+        <dl>
+            <dt>Followings</dt>
+            <dd><a href="#">@{loginMember.get.findFollowingMemberIds.size}</a></dd>
+            <dt>Followers</dt>
+            <dd><a href="#">@{loginMember.get.findFollowersMemberIds.size}</a></dd>
+        </dl>
+    </aside>
+    <timeline></timeline>
+</div>
+<commonfooter></commonfooter>
+
+<script>
+    var model = riot.mount("commonheader", {isLogin: @{loginMember.nonEmpty}})[0];
+    riot.mount("timeline", {target: "home"});
+    riot.mount("commonfooter", model);
+</script>
+</body>
+</html>
