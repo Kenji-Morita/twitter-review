@@ -61,11 +61,13 @@ class TweetController extends Controller {
       }
   }
 
+  // TODO SAW
   def favorite(targetTweetId: String) = AuthAction(parse.json) {
     implicit request =>
       Ok
   }
 
+  // TODO SAW
   def reTweet(tweetId: String) = AuthAction(parse.json) {
     implicit request =>
       Ok

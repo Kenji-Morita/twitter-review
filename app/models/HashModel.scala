@@ -1,7 +1,5 @@
 package models
 
-import java.util
-
 import com.sksamuel.elastic4s.ElasticDsl._
 import org.elasticsearch.action.search.SearchResponse
 import utils.ElasticsearchUtil
@@ -10,6 +8,9 @@ import utils.PasswordUtil.crypt
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
+/**
+ * @author SAW
+ */
 case class Hash(hashId: String, memberId: String, hashValue: String) {
 
   // ===================================================================================

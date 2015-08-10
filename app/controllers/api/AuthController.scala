@@ -61,22 +61,22 @@ class AuthController extends Controller {
 
   def signIn = Action(parse.json) {
     implicit request =>
-      val screenName = extractJsValue(request, "screenName")
-      val mail = extractJsValue(request, "mail")
-      val password = extractJsValue(request, "password")
+      val screenNameOpt = extractJsValue(request, "screenName")
+      val mailOpt = extractJsValue(request, "mail")
+      val passwordOpt = extractJsValue(request, "password")
 
-      def matchPassword(member: Option[Member]): Result = password match {
+      def matchPassword(member: Option[Member]): Result = passwordOpt match {
         case None => BadRequest(CommonJson().create(PasswordIsEmpty))
-        case Some(p) => member.isEmpty match {
+        case Some(password) => member.isEmpty match {
           case true => BadRequest(CommonJson().create(SignInFailed))
           case false => member.get match {
-            case m if m.isMatch(p) => Ok(CommonJson().success).withSession(request.session + ("memberId" -> m.memberId))
+            case m if m.isMatch(password) => Ok(CommonJson().success).withSession(request.session + ("memberId" -> m.memberId))
             case _ => BadRequest(CommonJson().create(SignInFailed))
           }
         }
       }
 
-      (screenName, mail) match {
+      (screenNameOpt, mailOpt) match {
         case (None, None) => BadRequest(CommonJson().create(AccountIsEmpty))
         case (Some(s), None) if !s.isEmpty => matchPassword(MemberModel.findByScreenName(s))
         case (None, Some(m)) if !m.isEmpty => matchPassword(MemberModel.findByMail(m))
@@ -88,8 +88,4 @@ class AuthController extends Controller {
     implicit request =>
       Ok(CommonJson().success).withSession(request.session - "memberId")
   }
-
-  // ===================================================================================
-  //                                                                              Helper
-  //                                                                              ======
 }
