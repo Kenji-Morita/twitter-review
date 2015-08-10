@@ -13,6 +13,7 @@
     //                                                                             Declare
     //                                                                             =======
     declare var opts: any;
+    declare var _: any;
     interface Window {
       superagent: any;
     }
@@ -37,9 +38,18 @@
         .end((error, response) => {
           if (response.ok) {
             var result = JSON.parse(response.text);
-            result.value.tweets.forEach(json => {
-              this.tweets.push({tweetId: json.tweetId, text: json.text, postedAt: json.postedAt, timestamp: json.timestamp});
-            });
+            this.tweets = _
+              .chain(result.value.tweets)
+              .map(json => {
+                return {
+                  tweetId: json.tweetId,
+                  text: json.text,
+                  postedAt: json.postedAt,
+                  timestamp: json.timestamp
+                };
+              })
+              .concat(this.tweets)
+              .value();
             this.update();
           }
         });

@@ -18,9 +18,18 @@ var loadTweets = function () {
         .end(function (error, response) {
         if (response.ok) {
             var result = JSON.parse(response.text);
-            result.value.tweets.forEach(function (json) {
-                _this.tweets.push({ tweetId: json.tweetId, text: json.text, postedAt: json.postedAt, timestamp: json.timestamp });
-            });
+            _this.tweets = _
+                .chain(result.value.tweets)
+                .map(function (json) {
+                return {
+                    tweetId: json.tweetId,
+                    text: json.text,
+                    postedAt: json.postedAt,
+                    timestamp: json.timestamp
+                };
+            })
+                .concat(_this.tweets)
+                .value();
             _this.update();
         }
     });

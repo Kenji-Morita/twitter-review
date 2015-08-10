@@ -99,7 +99,14 @@ object TweetModel {
           case null => None
           case r => Some(r)
         }
-        val deleted = source.get("deleted").asInstanceOf[Boolean]
+
+        // TODO SAW
+        val deleted = source.get("deleted").asInstanceOf[String] match {
+          case "true" => true
+          case _ => false
+        }
+        // val deleted = source.get("deleted").asInstanceOf[Boolean]
+
         Some(Tweet(targetTweetId, memberId, Some(text), timestamp, replyToId, reTweetFromId, deleted))
       }
       case _ => None

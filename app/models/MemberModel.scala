@@ -38,8 +38,10 @@ case class Member(memberId: String, screenName: String, password: String) {
       case r if !r.isExists => None
       case r => {
         val source = r.getSource
-        val profile = source.get("profile").asInstanceOf[util.HashMap[String, Any]]
-        Some(Profile(profile.get("iconId").asInstanceOf[String], profile.get("biography").asInstanceOf[String]))
+        source.get("profile").asInstanceOf[util.HashMap[String, Any]] match {
+          case null => None
+          case profile => Some(Profile(profile.get("iconId").asInstanceOf[String], profile.get("biography").asInstanceOf[String]))
+        }
       }
     }
   }

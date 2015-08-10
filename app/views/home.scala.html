@@ -1,5 +1,5 @@
 @(loginMember: Option[Member])
-@profile = @{loginMember.get.findProfile.get}
+@profile = @{loginMember.get.findProfile}
 
 <!DOCTYPE html>
 <html>
@@ -7,6 +7,7 @@
     <meta charset="UTF-8">
     <title>SAW Twitter</title>
     <link href="assets/stylesheets/normalize.css" rel="stylesheet" />
+    <script src="assets/javascripts/lodash.min.js"></script>
     <script src="assets/javascripts/superagent.js"></script>
     <script src="assets/javascripts/riot.min.js"></script>
     <script src="assets/javascripts/tag.min.js"></script>
@@ -15,9 +16,9 @@
 <commonheader></commonheader>
 <div class="sg-container">
     <aside class="pg-profile">
-        <img src="assets/icon/1@{profile.iconId}">
+        <img src="assets/icon/1@{profile.map(p => p.iconId)}">
         <h2>@{loginMember.get.screenName}</h2>
-        <p>@{profile.biography}</p>
+        <p>@{profile.map(p => p.biography)}</p>
         <dl>
             <dt>Followings</dt>
             <dd><a href="#">@{loginMember.get.findFollowingMemberIds.size}</a></dd>
