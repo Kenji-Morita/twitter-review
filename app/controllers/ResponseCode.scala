@@ -29,7 +29,7 @@ object ResponseCode {
 
   val HashValuesNotMatch                    = (40000, "Hash values are not match")
 
-  def ScreenNameIsUsed(screenName: String)  = (40000, s"Screen name '$screenName' is already used"))
+  def ScreenNameIsUsed(screenName: String)  = (40000, s"Screen name '$screenName' is already used")
 
   def MailIsUsed(mail: String)              = (40000, s"Mail address '$mail' is already used ")
 
