@@ -2,6 +2,7 @@ package controllers.api
 
 import actions.AuthAction
 import controllers.CommonJson
+import controllers.ResponseCode._
 import models.{Member, MemberModel}
 import play.api.mvc._
 import actions.AuthAction.getSessionUser
@@ -13,11 +14,11 @@ class MemberController extends Controller {
 
   def follow(memberId: String) = AuthAction {
     implicit request => MemberModel.findById(memberId) match {
-      case None => BadRequest(CommonJson().create(40000, "Target member is not found"))
+      case None => BadRequest(CommonJson().create(MemberNotFound))
       case target => {
         val loginMember: Member = getSessionUser(request)
         loginMember.checkAlreadyFollowing(memberId) match {
-          case true => BadRequest(CommonJson().create(40000, "You already follow target member"))
+          case true => BadRequest(CommonJson().create(Followed))
           case _ => {
             loginMember.follow(memberId)
             Ok(CommonJson().success)
@@ -29,11 +30,11 @@ class MemberController extends Controller {
 
   def unFollow(memberId: String) = AuthAction {
     implicit request => MemberModel.findById(memberId) match {
-      case None => BadRequest(CommonJson().create(40000, "Target member is not found"))
+      case None => BadRequest(CommonJson().create(MemberNotFound))
       case target => {
         val loginMember: Member = getSessionUser(request)
         loginMember.checkAlreadyFollowing(memberId) match {
-          case false => BadRequest(CommonJson().create(40000, "You Don't follow target member"))
+          case false => BadRequest(CommonJson().create(UnFollowed))
           case _ => {
             loginMember.unFollow(memberId)
             Ok(CommonJson().success)

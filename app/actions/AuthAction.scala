@@ -1,6 +1,7 @@
 package actions
 
 import controllers.CommonJson
+import controllers.ResponseCode._
 import models.{Member, MemberModel}
 import play.api.mvc.{Results, ActionBuilder, Request, Result}
 
@@ -15,6 +16,6 @@ object AuthAction extends ActionBuilder[Request] {
 
   override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]): Future[Result] = request.session.get("memberId") match {
     case memberId if !memberId.isEmpty => block.apply(request)
-    case _ => Future.successful(Results.Status(401).apply(CommonJson().create(40100, "You need authentication")))
+    case _ => Future.successful(Results.Status(401).apply(CommonJson().create(NeedSignIn)))
   }
 }

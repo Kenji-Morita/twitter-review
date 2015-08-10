@@ -7,6 +7,7 @@ import play.api.mvc._
 
 import utils.JsonUtil.extractJsValue
 import actions.AuthAction.getSessionUser
+import controllers.ResponseCode._
 
 /**
  * @author SAW
@@ -16,7 +17,7 @@ class TweetController extends Controller {
   def detail(tweetId: String) = Action {
     implicit request =>
       TweetModel.findById(tweetId) match {
-        case tweet if tweet.isEmpty || tweet.get.isDeleted => NotFound(CommonJson().create(40400, "Tweet not found"))
+        case tweet if tweet.isEmpty || tweet.get.isDeleted => NotFound(CommonJson().create(TweetNotFound))
         case tweet => Ok(CommonJson(tweet.get.toMap).success)
       }
   }
@@ -24,31 +25,37 @@ class TweetController extends Controller {
   def tweet = AuthAction(parse.json) {
     implicit request =>
       val loginMember: Member = getSessionUser(request)
-      val text: String = extractJsValue(request, "text")
-      try {
-        TweetModel.tweet(loginMember.memberId, text) match {
-          case None => BadRequest(CommonJson().create(4000, "Tweet failed"))
-          case tweetId => Ok(CommonJson(Map("tweetId" -> tweetId.get)).success)
+      val textOpt = extractJsValue(request, "text")
+      textOpt match {
+        case None => BadRequest(CommonJson().create(TextIsEmpty))
+        case Some(text) => try {
+          TweetModel.tweet(loginMember.memberId, text) match {
+            case None => BadRequest(CommonJson().create(TweetFailed))
+            case tweetId => Ok(CommonJson(Map("tweetId" -> tweetId.get)).success)
+          }
+        } catch {
+          case e => BadRequest(CommonJson().create(4000, e.getMessage))
         }
-      } catch {
-        case e => BadRequest(CommonJson().create(4000, e.getMessage))
       }
   }
 
   def reply(tweetId: String) = AuthAction(parse.json) {
     implicit request =>
       TweetModel.findById(tweetId) match {
-        case None => BadRequest(CommonJson().create(4000, "Reply target tweet id is not found"))
+        case None => BadRequest(CommonJson().create(TweetNotFound))
         case targetTweet => {
           val loginMember: Member = getSessionUser(request)
-          val text: String = extractJsValue(request, "text")
-          try {
-            TweetModel.reply(loginMember.memberId, text, targetTweet.get) match {
-              case None => BadRequest(CommonJson().create(4000, "Tweet failed"))
-              case tweetId => Ok(CommonJson(Map("tweetId" -> tweetId)).success)
+          val textOpt = extractJsValue(request, "text")
+          textOpt match {
+            case None => BadRequest(CommonJson().create(TextIsEmpty))
+            case Some(text) => try {
+              TweetModel.reply(loginMember.memberId, text, targetTweet.get) match {
+                case None => BadRequest(CommonJson().create(TweetFailed))
+                case tweetId => Ok(CommonJson(Map("tweetId" -> tweetId)).success)
+              }
+            } catch {
+              case e: Exception => BadRequest(CommonJson().create(4000, e.getMessage))
             }
-          } catch {
-            case e: Exception => BadRequest(CommonJson().create(4000, e.getMessage))
           }
         }
       }
@@ -68,9 +75,9 @@ class TweetController extends Controller {
     implicit request =>
       val loginMember: Member = getSessionUser(request)
       TweetModel.findById(tweetId) match {
-        case None => BadRequest(CommonJson().create(4000, "Delete target tweet id is not found"))
-        case targetTweet if targetTweet.get.memberId != loginMember.memberId => BadRequest(CommonJson().create(4000, "Delete target tweet is not yours tweet"))
-        case targetTweet if targetTweet.get.deleted => BadRequest(CommonJson().create(4000, "Already deleted"))
+        case None => BadRequest(CommonJson().create(TweetNotFound))
+        case targetTweet if targetTweet.get.memberId != loginMember.memberId => BadRequest(CommonJson().create(TweetIsNotYours))
+        case targetTweet if targetTweet.get.deleted => BadRequest(CommonJson().create(TweetDeleted))
         case targetTweet => {
           TweetModel.delete(targetTweet.get)
           Ok(CommonJson().success)

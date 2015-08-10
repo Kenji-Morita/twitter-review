@@ -17,7 +17,7 @@ class TimelineController extends Controller {
       val beforeTimestamp = request.getQueryString("before").map(_.toLong).getOrElse(Long.MaxValue)
       val afterTimestamp = request.getQueryString("after").map(_.toLong).getOrElse(Long.MinValue)
 
-      // find timeline
+      // find timeline»
       val loginMember: Member = getSessionUser(request)
       val memberIds: List[String] = loginMember.findFollowingMemberIds
       val tweets: List[Map[String, Any]] = TimelineModel.findByMemberIds(memberIds, beforeTimestamp, afterTimestamp)

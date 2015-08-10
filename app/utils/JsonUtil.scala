@@ -8,9 +8,9 @@ import play.api.mvc.Request
  */
 object JsonUtil {
 
-  def extractJsValue(request: Request[JsValue], key: String): String = try {
-    (request.body \ key).as[String]
+  def extractJsValue(request: Request[JsValue], key: String): Option[String] = try {
+    Some((request.body \ key).as[String])
   } catch {
-    case e => ""
+    case e => None
   }
 }
