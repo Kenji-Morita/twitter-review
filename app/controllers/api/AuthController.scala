@@ -16,27 +16,38 @@ class AuthController extends Controller {
   def signUp = Action(parse.json) {
     implicit request =>
       val screenNameOpt = extractJsValue(request, "screenName")
+      val displayNameOpt = extractJsValue(request, "displayName")
       val mailOpt = extractJsValue(request, "mail")
       val passwordOpt = extractJsValue(request, "password")
       val passwordConfirmOpt = extractJsValue(request, "passwordConfirm")
-      (screenNameOpt, mailOpt, passwordOpt, passwordConfirmOpt) match {
-        case (None, Some(m), Some(p), Some(pc)) => BadRequest(CommonJson().create(ScreenNameIsEmpty))
-        case (Some(s), None, Some(p), Some(pc)) => BadRequest(CommonJson().create(MailIsEmpty))
-        case (Some(s), Some(m), None, Some(pc)) => BadRequest(CommonJson().create(PasswordIsEmpty))
-        case (Some(s), Some(m), Some(p), None) => BadRequest(CommonJson().create(PasswordIsEmpty))
-        case (Some(screenName), Some(mail), Some(password), Some(passwordConfirm)) => password == passwordConfirm match {
-          case false => BadRequest(CommonJson().create(PasswordsNotMatch))
-          case true => MemberModel.findByScreenName(screenName) match {
-            case member if member.nonEmpty => BadRequest(CommonJson().create(ScreenNameIsUsed(screenName)))
-            case None => MemberModel.findByMail(mail) match {
-              case member if member.nonEmpty => BadRequest(CommonJson().create(MailIsUsed(mail)))
-              case None => {
-                val member = MemberModel.create(screenName, mail, password)
-                val hash = HashModel.create(member)
-                val url = s"http://${request.domain}/api/auth/confirm/${member.memberId}/$hash"
-                MailUtil.createSignUpMessage(screenName, url).sendTo(mail)
-                Ok(CommonJson().success)
-              }
+
+      (screenNameOpt, displayNameOpt, mailOpt, passwordOpt, passwordConfirmOpt) match {
+
+        // empty check
+        case (None, Some(d), Some(m), Some(p), Some(c)) => BadRequest(CommonJson().create(ScreenNameIsEmpty))
+        case (Some(s), None, Some(m), Some(p), Some(c)) => BadRequest(CommonJson().create(DisplayNameIsEmpty))
+        case (Some(s), Some(d), None, Some(p), Some(c)) => BadRequest(CommonJson().create(MailIsEmpty))
+        case (Some(s), Some(d), Some(m), None, Some(c)) => BadRequest(CommonJson().create(PasswordIsEmpty))
+        case (Some(s), Some(d), Some(m), Some(p), None) => BadRequest(CommonJson().create(PasswordIsEmpty))
+
+        case (Some(screenName), Some(displayName), Some(mail), Some(password), Some(passwordConfirm)) => password != passwordConfirm match {
+
+          // password confirm
+          case true  => BadRequest(CommonJson().create(PasswordsNotMatch))
+
+          case false => (MemberModel.findByScreenName(screenName), MemberModel.findByMail(mail)) match {
+
+            // used check
+            case (Some(m1), Some(m2)) => BadRequest(CommonJson().create(ScreenNameIsUsed(screenName)))
+            case (None, Some(m))      => BadRequest(CommonJson().create(ScreenNameIsUsed(screenName)))
+            case (Some(m), None)      => BadRequest(CommonJson().create(MailIsUsed(mail)))
+
+            case (None, None) => {
+              val member = MemberModel.create(screenName, displayName, mail, password)
+              val hash = HashModel.create(member)
+              val url = s"http://${request.domain}/api/auth/confirm/${member.memberId}/$hash"
+              MailUtil.createSignUpMessage(screenName, url).sendTo(mail)
+              Ok(CommonJson().success)
             }
           }
         }

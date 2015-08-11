@@ -1,7 +1,7 @@
 riot.tag('commonfooter', '<footer class="sg-footer"><div class="sg-container"><p>(c)2015 SAW</p></div></footer>', function(opts) {
 });
 
-riot.tag('commonheader', '<header class="sg-header"><div class="sg-container"><ul class="sg-header-contents"><li><h1>SAW Twitter</h1></li><li if="{opts.isLogin}"><a href="#">Setting</a><ul><li><a href="#">Setting</a></li><li><a href="#" onclick="{doSignOut}">Sign out</a></li></ul></li></ul></div></header>', function(opts) {// ===================================================================================
+riot.tag('commonheader', '<header class="sg-header"><div class="sg-container"><ul class="sg-header-contents"><li><h1>SAW Twitter</h1></li><li if="{opts.loginInfo.isLogin}"><a href="#">Setting</a><ul><li><a href="#">Setting</a></li><li><a href="#" onclick="{doSignOut}">Sign out</a></li></ul></li></ul></div></header>', function(opts) {// ===================================================================================
 //                                                                          Attributes
 //                                                                          ==========
 var request = window.superagent;
@@ -11,24 +11,71 @@ var request = window.superagent;
 this.doSignOut = function (e) {
     e.preventDefault();
     request
-        .post("api/auth/signout")
+        .post("/api/auth/signout")
         .withCredentials()
         .end(function (error, response) {
         if (response.ok) {
-            location.reload();
+            location.href = "/";
         }
     });
 };
+
+});
+
+riot.tag('follow', '<div if="{opts.loginInfo.isLogin}"><button if="{!isFollowing}" onclick="{doFollow}">Follow</button><button if="{isFollowing}" onclick="{doUnFollow}">Unfollow</button></div>', function(opts) {var _this = this;
 // ===================================================================================
-//                                                                               Mixin
+//                                                                          Attributes
+//                                                                          ==========
+var request = window.superagent;
+this.isFollowing = false;
+if (opts.loginInfo != undefined && opts.loginInfo.isLogin) {
+    if (opts.loginInfo.member.following.list.indexOf(opts.memberId) >= 0) {
+        this.isFollowing = true;
+    }
+}
+// ===================================================================================
+//                                                                               Event
 //                                                                               =====
-this.mixin({
-    observable: riot.observable(),
-});
+this.doFollow = function (e) {
+    e.preventDefault();
+    request
+        .post("/api/member/follow/" + opts.memberId)
+        .withCredentials()
+        .end(function (error, response) {
+        if (response.ok) {
+            _this.isFollowing = true;
+            _this.update();
+        }
+    });
+};
+this.doUnFollow = function (e) {
+    e.preventDefault();
+    request
+        .del("/api/member/unfollow/" + opts.memberId)
+        .withCredentials()
+        .end(function (error, response) {
+        if (response.ok) {
+            _this.isFollowing = false;
+            _this.update();
+        }
+        else {
+            console.log(response.text);
+        }
+    });
+};
 
 });
 
-riot.tag('signforms', '<ul><li if="{!toggleState}"><a href="#" onclick="{toggle}">Sign in</a></li><li if="{toggleState}"><a href="#" onclick="{toggle}">Sign up</a></li></ul><form class="pg-sign-in" if="{toggleState}" onsubmit="{doSignIn}"><label if="{signIn.account.isEmpty}">Please input Mail Address or Name!</label><input type="text" name="account" placeholder="Mail address or Name"><label if="{signIn.password.isEmpty}">Please input Password!</label><input type="password" name="signInPassword" placeholder="Password"><button>Sign in</button></form><form class="pg-sign-up" if="{!toggleState}" onsubmit="{doSignUp}"><label if="{signUp.screenName.isEmpty}">Please input Account Name!</label><input type="text" name="screenName" placeholder="Account Name"><label if="{signUp.mail.isEmpty}">Please input Mail Address!</label><input type="mail" name="mail" placeholder="Mail address"><label if="{signUp.password.isEmpty}">Please input Password!</label><input type="password" name="signUpPassword" placeholder="Password"><label if="{signUp.passwordConfirm.isEmpty}">Please input Password again!</label><input type="password" name="signUpPasswordConfirm" placeholder="Password confirm"><button>Sign up</button></form>', function(opts) {var _this = this;
+riot.tag('profileaside', '', function(opts) {
+});
+
+riot.tag('profileaside', '<aside class="pg-profile"><img src="/assets/icon/1"><h2>{opts.member.displayName}</h2><p>{opts.member.profile.biography}</p><dl><dt>Followings</dt><dd><a href="/following/{opts.member.memberId}">{opts.member.following.count}</a></dd><dt>Followers</dt><dd><a href="/followers/{opts.member.memberId}">{opts.member.followers.count}</a></dd></dl></aside>', function(opts) {// ===================================================================================
+//                                                                             Declare
+//                                                                             =======
+
+});
+
+riot.tag('signforms', '<ul><li if="{!toggleState}"><a href="#" onclick="{toggle}">Sign in</a></li><li if="{toggleState}"><a href="#" onclick="{toggle}">Sign up</a></li></ul><form class="pg-sign-in" if="{toggleState}" onsubmit="{doSignIn}"><label if="{signIn.account.isEmpty}">Please input Mail Address or Name!</label><input type="text" name="account" placeholder="Mail address or Name"><label if="{signIn.password.isEmpty}">Please input Password!</label><input type="password" name="signInPassword" placeholder="Password"><button>Sign in</button></form><form class="pg-sign-up" if="{!toggleState}" onsubmit="{doSignUp}"><label if="{signUp.screenName.isEmpty}">Please input Account Name!</label><input type="text" name="screenName" placeholder="Account Name"><label if="{signUp.displayName.isEmpty}">Please input Display Name!</label><input type="text" name="displayName" placeholder="Display Name"><label if="{signUp.mail.isEmpty}">Please input Mail Address!</label><input type="mail" name="mail" placeholder="Mail address"><label if="{signUp.password.isEmpty}">Please input Password!</label><input type="password" name="signUpPassword" placeholder="Password"><label if="{signUp.passwordConfirm.isEmpty}">Please input Password again!</label><input type="password" name="signUpPasswordConfirm" placeholder="Password confirm"><button>Sign up</button></form>', function(opts) {var _this = this;
 // ===================================================================================
 //                                                                          Attributes
 //                                                                          ==========
@@ -44,6 +91,9 @@ this.signIn = {
 };
 this.signUp = {
     screenName: {
+        isEmpty: false
+    },
+    displayName: {
         isEmpty: false
     },
     mail: {
@@ -92,18 +142,29 @@ this.doSignIn = function (e) {
 this.doSignUp = function (e) {
     e.preventDefault();
     var screenName = _this.screenName.value.trim();
+    var displayName = _this.displayName.value.trim();
     var mail = _this.mail.value.trim();
     var password = _this.signUpPassword.value.trim();
     var passwordConfirm = _this.signUpPasswordConfirm.value.trim();
     // empty validate
     _this.signUp.screenName.isEmpty = screenName == "";
+    _this.signUp.displayName.isEmpty = displayName == "";
     _this.signUp.mail.isEmpty = mail == "";
     _this.signUp.password.isEmpty = password == "";
     _this.signUp.passwordConfirm.isEmpty = passwordConfirm == "";
-    if (_this.signUp.screenName.isEmpty || _this.signUp.mail.isEmpty || _this.signUp.password.isEmpty || _this.signUp.passwordConfirm.isEmpty) {
+    if (_this.signUp.screenName.isEmpty || _this.signUp.displayName.isEmpty || _this.signUp.mail.isEmpty || _this.signUp.password.isEmpty || _this.signUp.passwordConfirm.isEmpty) {
         return;
     }
-    // TODO SAW sign up
+    // sign up
+    request
+        .post("api/auth/signup")
+        .send({ screenName: screenName, displayName: displayName, mail: mail, password: password, passwordConfirm: passwordConfirm })
+        .set('Accept', 'application/json')
+        .end(function (error, response) {
+        if (response.ok) {
+            location.reload();
+        }
+    });
 };
 
 });
@@ -146,5 +207,15 @@ var loadTweets = function () {
     setTimeout(loadTweets, 10000);
 };
 loadTweets();
+
+});
+
+riot.tag('tweet', '<section><header><img alt="memberIcon" src="/assets/icon/1"><dl><dt>{displayName}</dt><dd>@{screenName}</dd></dl><follow></follow></header><p if="{isRetweet}">{opts.tweet.reTweet.text}</p><p>{opts.tweet.text}</p><footer><time>{opts.tweet.postedAt}</time></footer></section>', function(opts) {// ===================================================================================
+//                                                                          Attributes
+//                                                                          ==========
+this.isRetweet = opts.tweet.reTweet != null;
+// ===================================================================================
+//                                                                               Event
+//                                                                               =====
 
 });

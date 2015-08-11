@@ -4,6 +4,7 @@ import java.util
 
 import org.elasticsearch.action.get.GetResponse
 import org.elasticsearch.action.index.IndexResponse
+import play.api.libs.json.{Json, JsNull}
 import utils.ElasticsearchUtil
 import utils.PasswordUtil.crypt
 import com.sksamuel.elastic4s.ElasticDsl._
@@ -15,7 +16,7 @@ import scala.concurrent.{Await, Future}
 /**
  * @author SAW
  */
-case class Member(memberId: String, screenName: String, password: String) {
+case class Member(memberId: String, screenName: String, displayName: String, password: String) {
 
   // ===================================================================================
   //                                                                               Match
@@ -50,42 +51,71 @@ case class Member(memberId: String, screenName: String, password: String) {
     val futureSearching: Future[SearchResponse] = client.execute(search in "twitter/follow" query {
       matches ("followFromId", memberId)
     })
-    memberId :: Await.result(futureSearching, Duration.Inf).getHits.getHits.map(_.getSource.get("followToId").asInstanceOf[String]).toList
+    Await.result(futureSearching, Duration.Inf).getHits.getHits.map(_.getSource.get("followToId").asInstanceOf[String]).toList
   }
 
   def findFollowersMemberIds: List[String] = ElasticsearchUtil.process { client =>
     val futureSearching: Future[SearchResponse] = client.execute(search in "twitter/follow" query {
       matches ("followToId", memberId)
     })
-    memberId :: Await.result(futureSearching, Duration.Inf).getHits.getHits.map(_.getSource.get("followFromId").asInstanceOf[String]).toList
+    Await.result(futureSearching, Duration.Inf).getHits.getHits.map(_.getSource.get("followFromId").asInstanceOf[String]).toList
   }
 
-  // ===================================================================================
-  //                                                                               Check
-  //                                                                               =====
-  def checkAlreadyFollowing(targetMemberId: String): Boolean = ElasticsearchUtil.process { client =>
-    val futureSearching: Future[SearchResponse] = client.execute(search in "twitter/follow" query {
-      matches ("followFromId", memberId)
-      matches ("followToId", targetMemberId)
-    })
-    Await.result(futureSearching, Duration.Inf).getHits.getHits match {
-      case hits if hits.size > 0 => true
-      case _ => false
+  def findFollowingId(memberId: String): Option[String] = ElasticsearchUtil.process { client =>
+    client.execute(search in "twitter/follow" query {
+      filteredQuery filter {
+        andFilter(
+          termFilter("followFromId", this.memberId),
+          termFilter("followToId", memberId)
+        )
+      }
+    }).await.getHits.getHits match {
+      case hits if hits.size > 0 => Some(hits.head.getId)
+      case _ => None
     }
   }
 
   // ===================================================================================
   //                                                                              Follow
   //                                                                              ======
-  def follow(targetMemberId: String): Unit = ElasticsearchUtil.process { client =>
+  def follow(memberId: String): Unit = ElasticsearchUtil.process { client =>
     client.execute(index into "twitter/follow" fields (
-      "followFromId" -> memberId,
-      "followToId" -> targetMemberId
+      "followFromId" -> this.memberId,
+      "followToId" -> memberId
     ))
   }
 
-  def unFollow(targetFollowingId: String): Unit = ElasticsearchUtil.process { client =>
-    client.execute(delete id targetFollowingId from "twitter/follow")
+  def unFollow(followingId: String): Unit = ElasticsearchUtil.process { client =>
+    client.execute(delete id followingId from "twitter/follow")
+  }
+
+  // ===================================================================================
+  //                                                                             Convert
+  //                                                                             =======
+  def toJsonStr: String = {
+    val profileJson = findProfile match {
+      case None => JsNull
+      case Some(profile) => Json.toJson(Map(
+        "biography" -> profile.biography,
+        "iconId" -> profile.iconId
+      ))
+    }
+    val following = findFollowingMemberIds
+    val followers = findFollowersMemberIds
+    Json.stringify(Json.toJson(Map(
+      "memberId" -> Json.toJson(memberId),
+      "screenName" -> Json.toJson(screenName),
+      "displayName" -> Json.toJson(displayName),
+      "profile" -> profileJson,
+      "following" -> Json.toJson(Map(
+        "count" -> Json.toJson(following.size),
+        "list" -> Json.toJson(following)
+      )),
+      "followers" -> Json.toJson(Map(
+        "count" -> Json.toJson(followers.size),
+        "list" -> Json.toJson(followers)
+      ))
+    )))
   }
 }
 
@@ -99,15 +129,16 @@ object MemberModel {
   // ===================================================================================
   //                                                                          New member
   //                                                                          ==========
-  def create(screenName: String, mail: String, password: String): Member = ElasticsearchUtil.process { client =>
+  def create(screenName: String, displayName: String, mail: String, password: String): Member = ElasticsearchUtil.process { client =>
     val cryptPassword = crypt(password)
     val futureSearching: Future[IndexResponse] = client.execute(index into "twitter/member" fields (
       "screenName" -> screenName,
+      "displayName" -> displayName,
       "mail" -> mail,
       "password" -> cryptPassword
     ))
     val memberId = Await.result(futureSearching, Duration.Inf).getId
-    Member(memberId, screenName, cryptPassword)
+    Member(memberId, screenName, displayName, cryptPassword)
   }
 
   // ===================================================================================
@@ -123,7 +154,7 @@ object MemberModel {
       case r if !r.isExists => None
       case r => {
         val source = r.getSource
-        Some(Member(r.getId, source.get("screenName").asInstanceOf[String], source.get("password").asInstanceOf[String]))
+        Some(Member(r.getId, source.get("screenName").asInstanceOf[String], source.get("displayName").asInstanceOf[String], source.get("password").asInstanceOf[String]))
       }
     }
   }
@@ -139,7 +170,7 @@ object MemberModel {
       case hits if hits.size > 0 => {
         val hit = hits.head
         val source = hit.getSource
-        Some(Member(hit.getId, source.get("screenName").asInstanceOf[String], source.get("password").asInstanceOf[String]))
+        Some(Member(hit.getId, source.get("screenName").asInstanceOf[String], source.get("displayName").asInstanceOf[String], source.get("password").asInstanceOf[String]))
       }
       case _ => None
     }

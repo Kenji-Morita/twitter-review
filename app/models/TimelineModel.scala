@@ -17,9 +17,13 @@ object TimelineModel {
   //                                                                                ====
   def findByMemberIds(memberIds: List[String], before: Long, after: Long): List[Map[String, Any]] = ElasticsearchUtil.process { client =>
     val futureSearching = client.execute(search in "twitter/tweet" fields "_timestamp" fields "_source" query {
-      filteredQuery filter termsFilter("memberId", memberIds: _*)
-      matches("deleted", false)
-      filteredQuery filter numericRangeFilter("_timestamp").lte(before).gt(after)
+      filteredQuery filter {
+        andFilter(
+          termsFilter("memberId", memberIds: _*),
+          termFilter("deleted", false),
+          numericRangeFilter("_timestamp").lte(before).gt(after)
+        )
+      }
     } sort (
       by field "_timestamp" order SortOrder.DESC
     ))

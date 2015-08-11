@@ -5,10 +5,15 @@ import java.time.{ZoneOffset, LocalDateTime}
 import java.util
 
 import com.sksamuel.elastic4s.ElasticDsl._
+
 import org.elasticsearch.action.index.IndexResponse
 import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.search.SearchHit
+
+import play.api.libs.json.{JsValue}
+
 import utils.ElasticsearchUtil
+import utils.JsonUtil.converter
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
@@ -49,9 +54,9 @@ case class Tweet(tweetId: String, memberId: String, text: Option[String], timest
   def isAfter(targetTimestamp: Long): Boolean = timestamp > targetTimestamp
 
   // ===================================================================================
-  //                                                                      Convert to map
-  //                                                                      ==============
-  def toMap = Map(
+  //                                                                             Convert
+  //                                                                             =======
+  def toMap: Map[String, Any] = Map(
     "tweetId" -> tweetId,
     "memberId" -> memberId,
     "text" -> text.getOrElse(null),
@@ -70,6 +75,8 @@ case class Tweet(tweetId: String, memberId: String, text: Option[String], timest
       )
     })
   )
+
+  def toJsonStr = converter(toMap).toString
 }
 
 /**
@@ -99,13 +106,7 @@ object TweetModel {
           case null => None
           case r => Some(r)
         }
-
-        // TODO SAW
-        val deleted = source.get("deleted").asInstanceOf[String] match {
-          case "true" => true
-          case _ => false
-        }
-        // val deleted = source.get("deleted").asInstanceOf[Boolean]
+        val deleted = source.get("deleted").asInstanceOf[Boolean]
 
         Some(Tweet(targetTweetId, memberId, Some(text), timestamp, replyToId, reTweetFromId, deleted))
       }

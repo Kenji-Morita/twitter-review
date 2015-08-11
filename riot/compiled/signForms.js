@@ -1,4 +1,4 @@
-riot.tag('signforms', '<ul><li if="{!toggleState}"><a href="#" onclick="{toggle}">Sign in</a></li><li if="{toggleState}"><a href="#" onclick="{toggle}">Sign up</a></li></ul><form class="pg-sign-in" if="{toggleState}" onsubmit="{doSignIn}"><label if="{signIn.account.isEmpty}">Please input Mail Address or Name!</label><input type="text" name="account" placeholder="Mail address or Name"><label if="{signIn.password.isEmpty}">Please input Password!</label><input type="password" name="signInPassword" placeholder="Password"><button>Sign in</button></form><form class="pg-sign-up" if="{!toggleState}" onsubmit="{doSignUp}"><label if="{signUp.screenName.isEmpty}">Please input Account Name!</label><input type="text" name="screenName" placeholder="Account Name"><label if="{signUp.mail.isEmpty}">Please input Mail Address!</label><input type="mail" name="mail" placeholder="Mail address"><label if="{signUp.password.isEmpty}">Please input Password!</label><input type="password" name="signUpPassword" placeholder="Password"><label if="{signUp.passwordConfirm.isEmpty}">Please input Password again!</label><input type="password" name="signUpPasswordConfirm" placeholder="Password confirm"><button>Sign up</button></form>', function(opts) {var _this = this;
+riot.tag('signforms', '<ul><li if="{!toggleState}"><a href="#" onclick="{toggle}">Sign in</a></li><li if="{toggleState}"><a href="#" onclick="{toggle}">Sign up</a></li></ul><form class="pg-sign-in" if="{toggleState}" onsubmit="{doSignIn}"><label if="{signIn.account.isEmpty}">Please input Mail Address or Name!</label><input type="text" name="account" placeholder="Mail address or Name"><label if="{signIn.password.isEmpty}">Please input Password!</label><input type="password" name="signInPassword" placeholder="Password"><button>Sign in</button></form><form class="pg-sign-up" if="{!toggleState}" onsubmit="{doSignUp}"><label if="{signUp.screenName.isEmpty}">Please input Account Name!</label><input type="text" name="screenName" placeholder="Account Name"><label if="{signUp.displayName.isEmpty}">Please input Display Name!</label><input type="text" name="displayName" placeholder="Display Name"><label if="{signUp.mail.isEmpty}">Please input Mail Address!</label><input type="mail" name="mail" placeholder="Mail address"><label if="{signUp.password.isEmpty}">Please input Password!</label><input type="password" name="signUpPassword" placeholder="Password"><label if="{signUp.passwordConfirm.isEmpty}">Please input Password again!</label><input type="password" name="signUpPasswordConfirm" placeholder="Password confirm"><button>Sign up</button></form>', function(opts) {var _this = this;
 // ===================================================================================
 //                                                                          Attributes
 //                                                                          ==========
@@ -14,6 +14,9 @@ this.signIn = {
 };
 this.signUp = {
     screenName: {
+        isEmpty: false
+    },
+    displayName: {
         isEmpty: false
     },
     mail: {
@@ -62,18 +65,29 @@ this.doSignIn = function (e) {
 this.doSignUp = function (e) {
     e.preventDefault();
     var screenName = _this.screenName.value.trim();
+    var displayName = _this.displayName.value.trim();
     var mail = _this.mail.value.trim();
     var password = _this.signUpPassword.value.trim();
     var passwordConfirm = _this.signUpPasswordConfirm.value.trim();
     // empty validate
     _this.signUp.screenName.isEmpty = screenName == "";
+    _this.signUp.displayName.isEmpty = displayName == "";
     _this.signUp.mail.isEmpty = mail == "";
     _this.signUp.password.isEmpty = password == "";
     _this.signUp.passwordConfirm.isEmpty = passwordConfirm == "";
-    if (_this.signUp.screenName.isEmpty || _this.signUp.mail.isEmpty || _this.signUp.password.isEmpty || _this.signUp.passwordConfirm.isEmpty) {
+    if (_this.signUp.screenName.isEmpty || _this.signUp.displayName.isEmpty || _this.signUp.mail.isEmpty || _this.signUp.password.isEmpty || _this.signUp.passwordConfirm.isEmpty) {
         return;
     }
-    // TODO SAW sign up
+    // sign up
+    request
+        .post("api/auth/signup")
+        .send({ screenName: screenName, displayName: displayName, mail: mail, password: password, passwordConfirm: passwordConfirm })
+        .set('Accept', 'application/json')
+        .end(function (error, response) {
+        if (response.ok) {
+            location.reload();
+        }
+    });
 };
 
 });

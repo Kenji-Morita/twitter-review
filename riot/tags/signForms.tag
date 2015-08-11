@@ -17,6 +17,8 @@
   <form class="pg-sign-up" if={!toggleState} onsubmit={doSignUp}>
       <label if={signUp.screenName.isEmpty}>Please input Account Name!</label>
       <input type="text" name="screenName" placeholder="Account Name">
+      <label if={signUp.displayName.isEmpty}>Please input Display Name!</label>
+      <input type="text" name="displayName" placeholder="Display Name">
       <label if={signUp.mail.isEmpty}>Please input Mail Address!</label>
       <input type="mail" name="mail" placeholder="Mail address">
       <label if={signUp.password.isEmpty}>Please input Password!</label>
@@ -52,6 +54,9 @@
 
     this.signUp = {
       screenName: {
+        isEmpty: false
+      },
+      displayName: {
         isEmpty: false
       },
       mail: {
@@ -104,21 +109,32 @@
     this.doSignUp = e => {
       e.preventDefault();
       var screenName = this.screenName.value.trim();
+      var displayName = this.displayName.value.trim();
       var mail = this.mail.value.trim();
       var password = this.signUpPassword.value.trim();
       var passwordConfirm = this.signUpPasswordConfirm.value.trim();
 
       // empty validate
       this.signUp.screenName.isEmpty = screenName == "";
+      this.signUp.displayName.isEmpty = displayName == "";
       this.signUp.mail.isEmpty = mail == "";
       this.signUp.password.isEmpty = password == "";
       this.signUp.passwordConfirm.isEmpty = passwordConfirm == "";
 
-      if (this.signUp.screenName.isEmpty || this.signUp.mail.isEmpty || this.signUp.password.isEmpty || this.signUp.passwordConfirm.isEmpty) {
+      if (this.signUp.screenName.isEmpty || this.signUp.displayName.isEmpty || this.signUp.mail.isEmpty || this.signUp.password.isEmpty || this.signUp.passwordConfirm.isEmpty) {
         return;
       }
 
-      // TODO SAW sign up
+      // sign up
+      request
+        .post("api/auth/signup")
+        .send({screenName: screenName, displayName: displayName, mail: mail, password: password, passwordConfirm: passwordConfirm})
+        .set('Accept', 'application/json')
+        .end((error, response) => {
+          if (response.ok) {
+            location.reload();
+          }
+        })
     }
   </script>
 </signforms>

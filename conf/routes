@@ -28,7 +28,7 @@ DELETE      /api/member/unfollow/:memberId              controllers.api.MemberCo
 
 # Timeline
 GET         /api/timeline/home                          controllers.api.TimelineController.home
-### GET         /api/timeline/member/:memberId              controllers.api.TimelineController.member(id: String)
+GET         /api/timeline/member/:memberId              controllers.api.TimelineController.member(memberId: String)
 ### GET         /api/timeline/search                        controllers.api.TimelineController.search
 
 # Tweet

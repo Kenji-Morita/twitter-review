@@ -53,6 +53,10 @@ es PUT _mapping/member '
         "index": "not_analyzed",
         "type": "string"
       },
+      "displayName": {
+        "index": "not_analyzed",
+        "type": "string"
+      },
       "mail": {
         "index": "not_analyzed",
         "type": "string"
@@ -66,6 +70,7 @@ es PUT _mapping/member '
         "type": "nested",
         "properties": {
           "iconId": {
+            "index": "not_analyzed",
             "type": "string",
             "default": "1"
           },
@@ -87,8 +92,14 @@ es PUT _mapping/follow '
       "store": "yes"
     },
     "properties": {
-      "followFromId": {"type": "string"},
-      "followToId": {"type": "string"}
+      "followFromId": {
+        "index": "not_analyzed",
+        "type": "string"
+      },
+      "followToId": {
+        "index": "not_analyzed",
+        "type": "string"
+      }
     }
   }
 }'
@@ -101,7 +112,10 @@ es PUT _mapping/withdrawal '
       "store": "yes"
     },
     "properties": {
-      "memberId": {"type": "string"},
+      "memberId": {
+        "index": "not_analyzed",
+        "type": "string"
+      },
       "reason": {"type": "string"}
     }
   }
@@ -117,10 +131,19 @@ es PUT _mapping/tweet '
       "store": "yes"
     },
     "properties": {
-      "memberId": {"type": "string"},
+      "memberId": {
+        "index": "not_analyzed",
+        "type": "string"
+      },
       "text": {"type": "string"},
-      "replyToId": {"type": "string"},
-      "reTweetFromId": {"type": "string"},
+      "replyToId": {
+        "index": "not_analyzed",
+        "type": "string"
+      },
+      "reTweetFromId": {
+        "index": "not_analyzed",
+        "type": "string"
+      },
       "deleted": {
         "type": "boolean",
         "default": false
@@ -137,8 +160,14 @@ es PUT _mapping/favorite '
       "store": "yes"
     },
     "properties": {
-      "memberId": {"type": "string"},
-      "tweetId": {"type": "string"}
+      "memberId": {
+        "index": "not_analyzed",
+        "type": "string"
+      },
+      "tweetId": {
+        "index": "not_analyzed",
+        "type": "string"
+      }
     }
   }
 }'
@@ -147,11 +176,14 @@ es PUT _mapping/hash '
 {
   "hash": {
     "properties": {
-      "memberId": {"type": "string"},
+      "memberId": {
+        "index": "not_analyzed",
+        "type": "string"
+      },
       "hash": {"type": "string"},
       "used": {
         "type": "boolean",
-        "defult": false
+        "default": false
       }
     }
   }
@@ -173,9 +205,11 @@ echo ""
 echo "<==== Insert ====>"
 echo ""
 
+# password: Bison
 es POST member/1 '
 {
-  "screenName": "Bison",
+  "screenName": "bison",
+  "displayName": "Bison",
   "mail": "bison@streetfighter.org",
   "password": "18b962f50525d6b098409574c2392e7d458b1a9d1cf67759d4d1ddb075cc8177b33a9b215b335ab0b0414371c1b4c3d2033fb709fce6ac38fd90b94107165d7c",
   "confirm": true,
@@ -184,9 +218,11 @@ es POST member/1 '
   }
 }'
 
+# password: Barlog
 es POST member/2 '
 {
-  "screenName": "Barlog",
+  "screenName": "barlog",
+  "displayName": "Barlog",
   "mail": "barlog@streetfighter.org",
   "password": "212324398bf0068f6e4a927cdc3951ba14992099979ef36e784a416119c323cef67a461fcdabc38b3d54d0f2db0a6362261ea74d08d1476358d5d84a31f07241",
   "confirm": true,
@@ -195,9 +231,11 @@ es POST member/2 '
   }
 }'
 
+# password: Sagat
 es POST member/3 '
 {
-  "screenName": "Sagat",
+  "screenName": "sagat",
+  "displayName": "Sagat",
   "mail": "sagat@streetfighter.org",
   "password": "ef135173d9666b180e6bd50a74784486e2fd536eb829188b95ebf16f7572cf7811ce77c782be647fbc0da7d103f660ca6bcbdb8f4652da37a9cb1910be3457c9",
   "confirm": true,
@@ -206,9 +244,11 @@ es POST member/3 '
   }
 }'
 
+# password: Vega
 es POST member/4 '
 {
-  "screenName": "Vega",
+  "screenName": "vega",
+  "displayName": "Vega",
   "mail": "vega@streetfighter.org",
   "password": "bab45847e2227d0c57136825dc31ba89c450bb522f62864f3d6caee24ef36962a2f89772161335252473da18b5828bfb9f286e2a618e49e0dac1d16f6ba24904",
   "confirm": true,
@@ -253,7 +293,8 @@ es POST withdrawal '
 es POST tweet/1 '
 {
   "memberId": "1",
-  "text": "hello, world!"
+  "text": "hello, world!",
+  "deleted": false
 }'
 
 es POST tweet/2 '
@@ -266,33 +307,38 @@ es POST tweet/2 '
 es POST tweet/3 '
 {
   "memberId": "2",
-  "reTweetFromId": "1"
+  "reTweetFromId": "1",
+  "deleted": false
 }'
 
 es POST tweet/4 '
 {
   "memberId": "3",
   "text": "@Bison テスト",
-  "replyToId": "1"
+  "replyToId": "1",
+  "deleted": false
 }'
 
 es POST tweet/5 '
 {
   "memberId": "4",
-  "text": "twitterやめます"
+  "text": "twitterやめます",
+  "deleted": false
 }'
 
 es POST tweet/6 '
 {
   "memberId": "2",
   "text": "@Vega ウケる",
-  "reTweetFromId": "5"
+  "reTweetFromId": "5",
+  "deleted": false
 }'
 
 es POST tweet/7 '
 {
   "memberId": "2",
-  "reTweetFromId": "2"
+  "reTweetFromId": "2",
+  "deleted": false
 }'
 
 for i in `seq 8 100`
@@ -300,7 +346,8 @@ do
   es POST tweet/$i '
   {
     "memberId": "1",
-    "text": "連投テスト"
+    "text": "連投テスト",
+    "deleted": false
   }'
 done
 

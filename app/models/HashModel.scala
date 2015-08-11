@@ -16,7 +16,11 @@ case class Hash(hashId: String, memberId: String, hashValue: String) {
   // ===================================================================================
   //                                                                               Match
   //                                                                               =====
-  def isMatch(hash: String) = hashValue == hash
+  def isMatch(hash: String) = {
+    println(hashValue)
+    println(hash)
+    hashValue == hash
+  }
 
   // ===================================================================================
   //                                                                             Confirm
@@ -50,7 +54,7 @@ object HashModel {
   def findHashValueByMemberId(memberId: String): Option[Hash] = ElasticsearchUtil.process { client =>
     val futureSearching: Future[SearchResponse] = client.execute(search in "twitter/hash" query {
       matches("memberId", memberId)
-      matches("used", false)
+      // matches("used", false)
     })
     Await.result(futureSearching, Duration.Inf).getHits.getHits.toList match {
       case head :: tail => {

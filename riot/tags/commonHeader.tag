@@ -6,7 +6,7 @@
                 <li>
                     <h1>SAW Twitter</h1>
                 </li>
-                <li if={opts.isLogin}>
+                <li if={opts.loginInfo.isLogin}>
                     <a href="#">Setting</a>
                     <ul>
                         <li><a href="#">Setting</a></li>
@@ -22,6 +22,7 @@
         //                                                                             Declare
         //                                                                             =======
         declare var riot: any;
+        declare var opts: any;
         interface Window {
           superagent: any;
         }
@@ -37,21 +38,14 @@
         this.doSignOut = e => {
           e.preventDefault();
           request
-            .post("api/auth/signout")
+            .post("/api/auth/signout")
             .withCredentials()
             .end((error, response) => {
               if (response.ok) {
-                location.reload();
+                location.href = "/";
               }
             });
         }
-
-        // ===================================================================================
-        //                                                                               Mixin
-        //                                                                               =====
-        this.mixin({
-          observable: riot.observable(),
-        });
     </script>
 
 </commonheader>

@@ -19,12 +19,19 @@ class FrontController extends Controller {
 
   def tweet(tweetId: String) = Action {
     implicit request =>
-      Ok(views.html.tweet(getSessionUser(request))(TweetModel.findById(tweetId)))
+      TweetModel.findById(tweetId) match {
+        case None => NotFound(views.html.tweet404(getSessionUser(request)))
+        case Some(tweet) if tweet.isDeleted => NotFound(views.html.tweet404(getSessionUser(request)))
+        case Some(tweet) => Ok(views.html.tweet(getSessionUser(request))(tweet))
+      }
   }
 
   def member(memberId: String) = Action {
     implicit request =>
-      Ok(views.html.member(getSessionUser(request))(MemberModel.findById(memberId)))
+      MemberModel.findById(memberId) match {
+        case None => NotFound(views.html.member404(getSessionUser(request)))
+        case Some(member) => Ok(views.html.member(getSessionUser(request))(member))
+      }
   }
 
   def following(memberId: String) = Action {

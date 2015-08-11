@@ -21,9 +21,10 @@
 <commonfooter></commonfooter>
 
 <script>
-    var model = riot.mount("commonheader", {isLogin: @{loginMember.nonEmpty}})[0];
-    riot.mount("commonfooter", model);
-    riot.mount("signforms", model);
+    var loginInfo = {isLogin: @{loginMember.nonEmpty}, member: null};
+    riot.mount("commonheader", {loginInfo:  loginInfo});
+    riot.mount("commonfooter");
+    riot.mount("signforms");
 </script>
 </body>
 </html>

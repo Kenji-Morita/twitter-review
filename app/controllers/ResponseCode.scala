@@ -17,6 +17,8 @@ object ResponseCode {
   //                                                                         ===========
   val ScreenNameIsEmpty                     = (40000, "ScreenName is empty")
 
+  val DisplayNameIsEmpty                    = (40000, "DisplayName is empty")
+
   val MailIsEmpty                           = (40000, "Mail is empty")
 
   val PasswordIsEmpty                       = (40000, "Password is empty")

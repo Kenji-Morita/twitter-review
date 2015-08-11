@@ -15,10 +15,10 @@ class MemberController extends Controller {
   def follow(memberId: String) = AuthAction {
     implicit request => MemberModel.findById(memberId) match {
       case None => BadRequest(CommonJson().create(MemberNotFound))
-      case target => {
+      case _ => {
         val loginMember: Member = getSessionUser(request).get
-        loginMember.checkAlreadyFollowing(memberId) match {
-          case true => BadRequest(CommonJson().create(Followed))
+        loginMember.findFollowingId(memberId) match {
+          case Some(followId) => BadRequest(CommonJson().create(Followed))
           case _ => {
             loginMember.follow(memberId)
             Ok(CommonJson().success)
@@ -31,12 +31,12 @@ class MemberController extends Controller {
   def unFollow(memberId: String) = AuthAction {
     implicit request => MemberModel.findById(memberId) match {
       case None => BadRequest(CommonJson().create(MemberNotFound))
-      case target => {
+      case _ => {
         val loginMember: Member = getSessionUser(request).get
-        loginMember.checkAlreadyFollowing(memberId) match {
-          case false => BadRequest(CommonJson().create(UnFollowed))
-          case _ => {
-            loginMember.unFollow(memberId)
+        loginMember.findFollowingId(memberId) match {
+          case None => BadRequest(CommonJson().create(UnFollowed))
+          case Some(followId) => {
+            loginMember.unFollow(followId)
             Ok(CommonJson().success)
           }
         }
