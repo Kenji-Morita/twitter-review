@@ -57,10 +57,12 @@ case class Member(memberId: String, screenName: String, displayName: String, pas
   }
 
   def findFollowersMemberIds: List[String] = ElasticsearchUtil.process { client =>
-    val futureSearching: Future[SearchResponse] = client.execute(search in "twitter/follow" query {
+    client.execute(search in "twitter/follow" query {
       matches ("followToId", memberId)
-    })
-    Await.result(futureSearching, Duration.Inf).getHits.getHits.map(_.getSource.get("followFromId").asInstanceOf[String]).toList
+    }).await.getHits.getHits match {
+      case hits if hits.isEmpty => List()
+      case hits => hits.map(_.getSource.get("followFromId").asInstanceOf[String]).toList
+    }
   }
 
   def findFollowingId(memberId: String): Option[String] = ElasticsearchUtil.process { client =>
@@ -72,8 +74,8 @@ case class Member(memberId: String, screenName: String, displayName: String, pas
         )
       }
     }).await.getHits.getHits match {
-      case hits if hits.size > 0 => Some(hits.head.getId)
-      case _ => None
+      case hits if hits.isEmpty => None
+      case hits => Some(hits.head.getId)
     }
   }
 

@@ -16,11 +16,7 @@ case class Hash(hashId: String, memberId: String, hashValue: String) {
   // ===================================================================================
   //                                                                               Match
   //                                                                               =====
-  def isMatch(hash: String) = {
-    println(hashValue)
-    println(hash)
-    hashValue == hash
-  }
+  def isMatch(hash: String) = hashValue == hash
 
   // ===================================================================================
   //                                                                             Confirm
@@ -52,16 +48,20 @@ object HashModel {
   //                                                                                Find
   //                                                                                ====
   def findHashValueByMemberId(memberId: String): Option[Hash] = ElasticsearchUtil.process { client =>
-    val futureSearching: Future[SearchResponse] = client.execute(search in "twitter/hash" query {
-      matches("memberId", memberId)
-      // matches("used", false)
-    })
-    Await.result(futureSearching, Duration.Inf).getHits.getHits.toList match {
-      case head :: tail => {
+    client.execute(search in "twitter/hash" query {
+      filteredQuery filter {
+        andFilter(
+          termFilter("memberId", memberId),
+          termFilter("used", false)
+        )
+      }
+    }).await.getHits.getHits match {
+      case hits if hits.isEmpty => None
+      case hits => {
+        val head = hits.head
         val source = head.getSource
         Some(Hash(head.id, source.get("memberId").asInstanceOf[String], source.get("hash").asInstanceOf[String]))
       }
-      case _ => None
     }
   }
 }
