@@ -92,24 +92,7 @@ object TweetModel {
       matches ("_id", targetTweetId)
     })
     Await.result(futureSearching, Duration.Inf).getHits.getHits match {
-      case hits if hits.size > 0 => {
-        val hit: SearchHit = hits.head
-        val source: util.Map[String, AnyRef] = hit.getSource
-        val memberId: String = source.get("memberId").asInstanceOf[String]
-        val text: String = source.get("text").asInstanceOf[String]
-        val timestamp = hit.field("_timestamp").getValue.toString.toLong
-        val replyToId = source.get("replyToId").asInstanceOf[String] match {
-          case null => None
-          case r => Some(r)
-        }
-        val reTweetFromId = source.get("reTweetFromId").asInstanceOf[String] match {
-          case null => None
-          case r => Some(r)
-        }
-        val deleted = source.get("deleted").asInstanceOf[Boolean]
-
-        Some(Tweet(targetTweetId, memberId, Some(text), timestamp, replyToId, reTweetFromId, deleted))
-      }
+      case hits if hits.size > 0 => Some(mapping(hits.head))
       case _ => None
     }
   }
@@ -122,7 +105,7 @@ object TweetModel {
     val futureSearching: Future[IndexResponse] = client.execute(index into "twitter/tweet" fields (
       "memberId" -> authorMemberId,
       "text" -> text,
-      "deleted" -> "false"
+      "deleted" -> false
     ))
     Some(Await.result(futureSearching, Duration.Inf).getId)
   }
@@ -144,11 +127,29 @@ object TweetModel {
   }
 
   // ===================================================================================
-  //                                                                          Validation
-  //                                                                          ==========
+  //                                                                              Helper
+  //                                                                              ======
   def validateText(text: String): Boolean = text.length match {
     case l if l > 140 => throw new Exception("Tweet text length over 140 words")
     case l if l == 0 => throw new Exception("Tweet text is empty")
     case _ => true
+  }
+
+  def mapping(hit: SearchHit): Tweet = {
+    val source: util.Map[String, AnyRef] = hit.getSource
+    val memberId: String = source.get("memberId").asInstanceOf[String]
+    val text: String = source.get("text").asInstanceOf[String]
+    val timestamp = hit.field("_timestamp").getValue.toString.toLong
+    val replyToId = source.get("replyToId").asInstanceOf[String] match {
+      case null => None
+      case r => Some(r)
+    }
+    val reTweetFromId = source.get("reTweetFromId").asInstanceOf[String] match {
+      case null => None
+      case r => Some(r)
+    }
+    val deleted = source.get("deleted").asInstanceOf[Boolean]
+
+    Tweet(hit.getId, memberId, Some(text), timestamp, replyToId, reTweetFromId, deleted)
   }
 }

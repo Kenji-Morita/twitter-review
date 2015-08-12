@@ -5,7 +5,7 @@ import java.util
 import org.elasticsearch.action.get.GetResponse
 import org.elasticsearch.action.index.IndexResponse
 import play.api.libs.json.{Json, JsNull}
-import utils.ElasticsearchUtil
+import utils.{JsonUtil, ElasticsearchUtil}
 import utils.PasswordUtil.crypt
 import com.sksamuel.elastic4s.ElasticDsl._
 import org.elasticsearch.action.search.SearchResponse
@@ -48,10 +48,12 @@ case class Member(memberId: String, screenName: String, displayName: String, pas
   }
 
   def findFollowingMemberIds: List[String] = ElasticsearchUtil.process { client =>
-    val futureSearching: Future[SearchResponse] = client.execute(search in "twitter/follow" query {
+    client.execute(search in "twitter/follow" query {
       matches ("followFromId", memberId)
-    })
-    Await.result(futureSearching, Duration.Inf).getHits.getHits.map(_.getSource.get("followToId").asInstanceOf[String]).toList
+    }).await.getHits.getHits match {
+      case hits if hits.isEmpty => List()
+      case hits => hits.map(_.getSource.get("followFromId").asInstanceOf[String]).toList
+    }
   }
 
   def findFollowersMemberIds: List[String] = ElasticsearchUtil.process { client =>

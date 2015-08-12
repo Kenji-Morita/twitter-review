@@ -36,12 +36,18 @@ class FrontController extends Controller {
 
   def following(memberId: String) = Action {
     implicit request =>
-      Ok(views.html.following(getSessionUser(request))(MemberModel.findById(memberId)))
+      MemberModel.findById(memberId) match {
+        case None => NotFound(views.html.member404(getSessionUser(request)))
+        case Some(member) => Ok(views.html.following(getSessionUser(request))(member))
+      }
   }
 
   def followers(memberId: String) = Action {
     implicit request =>
-      Ok(views.html.followers(getSessionUser(request))(MemberModel.findById(memberId)))
+      MemberModel.findById(memberId) match {
+        case None => NotFound(views.html.member404(getSessionUser(request)))
+        case Some(member) => Ok(views.html.followers(getSessionUser(request))(member))
+      }
   }
 
   def setting = Action {

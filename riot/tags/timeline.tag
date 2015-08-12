@@ -2,9 +2,9 @@
   <ul class="pg-timeline">
       <li class="pg-timeline-tweet" each={tweets}>
           <img src="http://placehold.jp/64x64.png">
-          <h3><a href="#">screenName</a></h3>
+          <h3><a href="/member/{memberId}">screenName</a></h3>
           <p data-tweet-id={tweetId}>{text}</p>
-          <time><a href="#">{postedAt}</a></time>
+          <time><a href="/tweet/{tweetId}">{postedAt}</a></time>
       </li>
   </ul>
 
@@ -42,6 +42,7 @@
               .chain(result.value.tweets)
               .map(json => {
                 return {
+                  memberId: json.memberId,
                   tweetId: json.tweetId,
                   text: json.text,
                   postedAt: json.postedAt,

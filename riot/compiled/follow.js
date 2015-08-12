@@ -1,13 +1,15 @@
-riot.tag('follow', '<div if="{opts.loginInfo.isLogin}"><button if="{!isFollowing}" onclick="{doFollow}">Follow</button><button if="{isFollowing}" onclick="{doUnFollow}">Unfollow</button></div>', function(opts) {var _this = this;
+riot.tag('follow', '<div if="{opts.loginInfo.isLogin && !isMe}"><button if="{!isFollowing}" onclick="{doFollow}">Follow</button><button if="{isFollowing}" onclick="{doUnFollow}">Unfollow</button></div>', function(opts) {var _this = this;
 // ===================================================================================
 //                                                                          Attributes
 //                                                                          ==========
 var request = window.superagent;
 this.isFollowing = false;
+this.isMe = true;
 if (opts.loginInfo != undefined && opts.loginInfo.isLogin) {
     if (opts.loginInfo.member.following.list.indexOf(opts.memberId) >= 0) {
         this.isFollowing = true;
     }
+    this.isMe = opts.loginInfo.member.memberId == opts.memberId;
 }
 // ===================================================================================
 //                                                                               Event

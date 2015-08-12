@@ -16,6 +16,7 @@
 <commonheader></commonheader>
 <div class="sg-container">
     <profileaside></profileaside>
+    <post></post>
     <timeline></timeline>
 </div>
 <commonfooter></commonfooter>
@@ -25,6 +26,7 @@
 
     riot.mount("commonheader", {loginInfo: loginInfo});
     riot.mount("profileaside", {member: loginInfo.member});
+    riot.mount("post", {replyTo: null});
     riot.mount("timeline", {target: "home"});
     riot.mount("commonfooter");
 </script>

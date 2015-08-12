@@ -22,16 +22,18 @@ this.doSignOut = function (e) {
 
 });
 
-riot.tag('follow', '<div if="{opts.loginInfo.isLogin}"><button if="{!isFollowing}" onclick="{doFollow}">Follow</button><button if="{isFollowing}" onclick="{doUnFollow}">Unfollow</button></div>', function(opts) {var _this = this;
+riot.tag('follow', '<div if="{opts.loginInfo.isLogin && !isMe}"><button if="{!isFollowing}" onclick="{doFollow}">Follow</button><button if="{isFollowing}" onclick="{doUnFollow}">Unfollow</button></div>', function(opts) {var _this = this;
 // ===================================================================================
 //                                                                          Attributes
 //                                                                          ==========
 var request = window.superagent;
 this.isFollowing = false;
+this.isMe = true;
 if (opts.loginInfo != undefined && opts.loginInfo.isLogin) {
     if (opts.loginInfo.member.following.list.indexOf(opts.memberId) >= 0) {
         this.isFollowing = true;
     }
+    this.isMe = opts.loginInfo.member.memberId == opts.memberId;
 }
 // ===================================================================================
 //                                                                               Event
@@ -62,6 +64,52 @@ this.doUnFollow = function (e) {
             console.log(response.text);
         }
     });
+};
+
+});
+
+riot.tag('post', '<form onsubmit="{doPostTweet}" class="sg-post-tweet"><p>tweet length: {tweetLength}</p><textarea oninput="{doInputTweet}"></textarea><button __disabled="{textLengthInvalid}">Tweet</button></form>', function(opts) {var _this = this;
+// ===================================================================================
+//                                                                          Attributes
+//                                                                          ==========
+var request = window.superagent;
+this.tweetLength = 0;
+this.textLengthInvalid = true;
+// ===================================================================================
+//                                                                               Event
+//                                                                               =====
+this.doInputTweet = function (e) {
+    var textarea = e.target;
+    updateTextareaView(textarea.value);
+    _this.update();
+};
+this.doPostTweet = function (e) {
+    e.preventDefault();
+    var textarea = e.target.querySelectorAll("textarea")[0];
+    request
+        .post("/api/tweet/tweet")
+        .withCredentials()
+        .send({ text: textarea.value })
+        .set('Accept', 'application/json')
+        .end(function (error, response) {
+        if (response.ok) {
+            textarea.value = "";
+            updateTextareaView(textarea.value);
+        }
+    });
+};
+// ===================================================================================
+//                                                                               Logic
+//                                                                               =====
+var updateTextareaView = function (text) {
+    _this.tweetLength = text.length;
+    if (_this.tweetLength > 140 || _this.tweetLength <= 0) {
+        _this.textLengthInvalid = true;
+    }
+    else {
+        _this.textLengthInvalid = false;
+    }
+    _this.update();
 };
 
 });
@@ -169,7 +217,7 @@ this.doSignUp = function (e) {
 
 });
 
-riot.tag('timeline', '<ul class="pg-timeline"><li class="pg-timeline-tweet" each="{tweets}"><img src="http://placehold.jp/64x64.png"><h3><a href="#">screenName</a></h3><p data-tweet-id="{tweetId}">{text}</p><time><a href="#">{postedAt}</a></time></li></ul>', function(opts) {var _this = this;
+riot.tag('timeline', '<ul class="pg-timeline"><li class="pg-timeline-tweet" each="{tweets}"><img src="http://placehold.jp/64x64.png"><h3><a href="/member/{memberId}">screenName</a></h3><p data-tweet-id="{tweetId}">{text}</p><time><a href="/tweet/{tweetId}">{postedAt}</a></time></li></ul>', function(opts) {var _this = this;
 // ===================================================================================
 //                                                                          Attributes
 //                                                                          ==========
@@ -193,6 +241,7 @@ var loadTweets = function () {
                 .chain(result.value.tweets)
                 .map(function (json) {
                 return {
+                    memberId: json.memberId,
                     tweetId: json.tweetId,
                     text: json.text,
                     postedAt: json.postedAt,

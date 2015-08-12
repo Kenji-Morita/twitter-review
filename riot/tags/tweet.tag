@@ -20,7 +20,6 @@
     //                                                                             Declare
     //                                                                             =======
     declare var opts: any;
-    declare var riot: any;
 
     // ===================================================================================
     //                                                                          Attributes
