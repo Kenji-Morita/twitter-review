@@ -15,6 +15,8 @@ object ResponseCode {
   // ===================================================================================
   //                                                                         Bad Request
   //                                                                         ===========
+  val ValidationError                       = (40000, "Input json is invalid")
+
   val ScreenNameIsEmpty                     = (40000, "ScreenName is empty")
 
   val DisplayNameIsEmpty                    = (40000, "DisplayName is empty")

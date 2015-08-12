@@ -4,19 +4,23 @@ import java.time.format.DateTimeFormatter
 import java.time.{ZoneOffset, LocalDateTime}
 import java.util
 
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import com.sksamuel.elastic4s.ElasticDsl._
 
-import org.elasticsearch.action.index.IndexResponse
 import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.search.SearchHit
 
-import play.api.libs.json.{JsValue}
+import play.api.libs.json._
 
 import utils.ElasticsearchUtil
-import utils.JsonUtil.converter
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
+/**
+ * @author SAW
+ */
+case class TweetObject(tweetId: String, memberId: String, text: Option[String], timestamp: Long, replyToId: Option[String])
 
 /**
  * @author SAW
@@ -56,27 +60,18 @@ case class Tweet(tweetId: String, memberId: String, text: Option[String], timest
   // ===================================================================================
   //                                                                             Convert
   //                                                                             =======
-  def toMap: Map[String, Any] = Map(
-    "tweetId" -> tweetId,
-    "memberId" -> memberId,
-    "text" -> text.getOrElse(null),
-    "replyToId" -> replyToId.getOrElse(null),
-    "postedAt" -> postedAt,
-    "timestamp" -> timestamp,
-    "reTweet" -> (isReTweet match {
-      case false => null
-      case _ => Map(
-        "tweetId" -> reTweet.get.tweetId,
-        "memberId" -> reTweet.get.memberId,
-        "text" -> reTweet.get.text.getOrElse(null),
-        "replyToId" -> reTweet.get.replyToId.getOrElse(null),
-        "postedAt" -> reTweet.get.postedAt,
-        "timestamp" -> reTweet.get.timestamp
-      )
-    })
-  )
+  def toObject: TweetObject = TweetObject(tweetId, memberId, text, timestamp, replyToId)
 
-  def toJsonStr = converter(toMap).toString
+  def toJson = Json.toJson(Map(
+    "tweetId" -> Json.toJson(tweetId),
+    "memberId" -> Json.toJson(memberId),
+    "text" -> text.map(t => Json.toJson(t)).getOrElse(JsNull),
+    "timestamp" -> Json.toJson(timestamp),
+    "replyToId" -> replyToId.map(r => Json.toJson(r)).getOrElse(JsNull),
+    "reTweet" -> retweetFromId.flatMap(id => TweetModel.findById(id).map(t => Json.toJson(t.toObject)(Json.writes[TweetObject]))).getOrElse(JsNull)
+  ))
+
+  def toJsonStr = toJson.toString
 }
 
 /**
@@ -100,14 +95,12 @@ object TweetModel {
   // ===================================================================================
   //                                                                                  Do
   //                                                                                  ==
-  def tweet(authorMemberId: String, text: String): Option[String] = ElasticsearchUtil.process { client =>
-    validateText(text)
-    val futureSearching: Future[IndexResponse] = client.execute(index into "twitter/tweet" fields (
+  def tweet(authorMemberId: String, text: String): Future[String] = ElasticsearchUtil.process { client =>
+    client.execute(index into "twitter/tweet" fields (
       "memberId" -> authorMemberId,
       "text" -> text,
       "deleted" -> false
-    ))
-    Some(Await.result(futureSearching, Duration.Inf).getId)
+    )).map(_.getId)
   }
 
   def reply(authorMemberId: String, text: String, tweet: Tweet): Option[String] = ElasticsearchUtil.process { client =>

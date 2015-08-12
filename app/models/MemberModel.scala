@@ -5,13 +5,15 @@ import java.util
 import org.elasticsearch.action.get.GetResponse
 import org.elasticsearch.action.index.IndexResponse
 import play.api.libs.json.{Json, JsNull}
-import utils.{JsonUtil, ElasticsearchUtil}
+import utils.ElasticsearchUtil
 import utils.PasswordUtil.crypt
 import com.sksamuel.elastic4s.ElasticDsl._
 import org.elasticsearch.action.search.SearchResponse
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * @author SAW
@@ -21,11 +23,13 @@ case class Member(memberId: String, screenName: String, displayName: String, pas
   // ===================================================================================
   //                                                                               Match
   //                                                                               =====
+
   def isMatch(password: String): Boolean = this.password == crypt(password)
 
   // ===================================================================================
   //                                                                             Confirm
   //                                                                             =======
+
   def confirm = ElasticsearchUtil.process { client =>
     client.execute(update id memberId in "twitter/member" doc "confirm" -> true)
   }
@@ -33,6 +37,7 @@ case class Member(memberId: String, screenName: String, displayName: String, pas
   // ===================================================================================
   //                                                                                Find
   //                                                                                ====
+
   def findProfile: Option[Profile] = ElasticsearchUtil.process { client =>
     val futureSearching: Future[GetResponse] = client.execute(get id memberId from "twitter/member")
     Await.result(futureSearching, Duration.Inf) match {
@@ -133,7 +138,7 @@ object MemberModel {
   // ===================================================================================
   //                                                                          New member
   //                                                                          ==========
-  def create(screenName: String, displayName: String, mail: String, password: String): Member = ElasticsearchUtil.process { client =>
+  def create(screenName: String, displayName: String, mail: String, password: String): Future[Member] = ElasticsearchUtil.process { client =>
     val cryptPassword = crypt(password)
     val futureSearching: Future[IndexResponse] = client.execute(index into "twitter/member" fields (
       "screenName" -> screenName,
@@ -141,13 +146,13 @@ object MemberModel {
       "mail" -> mail,
       "password" -> cryptPassword
     ))
-    val memberId = Await.result(futureSearching, Duration.Inf).getId
-    Member(memberId, screenName, displayName, cryptPassword)
+    futureSearching.map(f => Member(f.getId, screenName, displayName, cryptPassword))
   }
 
   // ===================================================================================
   //                                                                                Find
   //                                                                                ====
+
   def findByScreenName(screenName: String): Option[Member] = createMemberBySingleKey("screenName", screenName)
 
   def findByMail(mail: String): Option[Member] = createMemberBySingleKey("mail", mail)

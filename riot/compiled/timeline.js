@@ -19,7 +19,7 @@ var loadTweets = function () {
         if (response.ok) {
             var result = JSON.parse(response.text);
             _this.tweets = _
-                .chain(result.value.tweets)
+                .chain(result.value)
                 .map(function (json) {
                 return {
                     memberId: json.memberId,

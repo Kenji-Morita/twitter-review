@@ -39,7 +39,7 @@
           if (response.ok) {
             var result = JSON.parse(response.text);
             this.tweets = _
-              .chain(result.value.tweets)
+              .chain(result.value)
               .map(json => {
                 return {
                   memberId: json.memberId,

@@ -2,10 +2,11 @@ package models
 
 import com.sksamuel.elastic4s.ElasticDsl._
 import org.elasticsearch.search.sort.SortOrder
+import play.api.libs.json.JsValue
 import utils.ElasticsearchUtil
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * @author SAW
@@ -15,7 +16,7 @@ object TimelineModel {
   // ===================================================================================
   //                                                                                Find
   //                                                                                ====
-  def findByMemberIds(memberIds: List[String], before: Long, after: Long): List[Map[String, Any]] = ElasticsearchUtil.process { client =>
+  def findByMemberIds(memberIds: List[String], before: Long, after: Long): Future[List[JsValue]] = ElasticsearchUtil.process { client =>
     client.execute(search in "twitter/tweet" fields "_timestamp" fields "_source" query {
       filteredQuery filter {
         andFilter(
@@ -25,10 +26,9 @@ object TimelineModel {
         )
       }
     } sort (
-        by field "_timestamp" order SortOrder.DESC
-      )).await.getHits.getHits match {
-      case hits if hits.isEmpty => List()
-      case hits => hits.map(TweetModel.mapping(_)).filter(!_.isDeleted).map(_.toMap).toList
+      by field "_timestamp" order SortOrder.DESC
+    )).map{ result =>
+      result.getHits.getHits.toList.map(TweetModel.mapping(_).toJson)
     }
   }
 }

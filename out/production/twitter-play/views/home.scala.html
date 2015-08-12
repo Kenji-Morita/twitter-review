@@ -1,0 +1,34 @@
+@(loginMember: Option[Member])
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>SAW Twitter</title>
+    <link href="/assets/stylesheets/normalize.css" rel="stylesheet" />
+    <script src="/assets/javascripts/lodash.min.js"></script>
+    <script src="/assets/javascripts/superagent.js"></script>
+    <script src="/assets/javascripts/riot.min.js"></script>
+    <script src="/assets/javascripts/tag.min.js"></script>
+</head>
+
+<body>
+<commonheader></commonheader>
+<div class="sg-container">
+    <profileaside></profileaside>
+    <post></post>
+    <timeline></timeline>
+</div>
+<commonfooter></commonfooter>
+
+<script>
+    var loginInfo = {isLogin: @{loginMember.nonEmpty}, member: @Html(loginMember.get.toJsonStr)};
+
+    riot.mount("commonheader", {loginInfo: loginInfo});
+    riot.mount("profileaside", {member: loginInfo.member});
+    riot.mount("post", {replyTo: null});
+    riot.mount("timeline", {target: "home"});
+    riot.mount("commonfooter");
+</script>
+</body>
+</html>

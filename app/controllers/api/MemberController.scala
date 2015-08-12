@@ -1,11 +1,11 @@
 package controllers.api
 
 import actions.AuthAction
-import controllers.CommonJson
 import controllers.ResponseCode._
 import models.{Member, MemberModel}
 import play.api.mvc._
 import actions.AuthAction.getSessionUser
+import utils.JsonUtil._
 
 /**
  * @author SAW
@@ -14,14 +14,14 @@ class MemberController extends Controller {
 
   def follow(memberId: String) = AuthAction {
     implicit request => MemberModel.findById(memberId) match {
-      case None => BadRequest(CommonJson().create(MemberNotFound))
+      case None => BadRequest(createJson(MemberNotFound))
       case _ => {
         val loginMember: Member = getSessionUser(request).get
         loginMember.findFollowingId(memberId) match {
-          case Some(followId) => BadRequest(CommonJson().create(Followed))
+          case Some(followId) => BadRequest(createJson(Followed))
           case _ => {
             loginMember.follow(memberId)
-            Ok(CommonJson().success)
+            Ok(successJson)
           }
         }
       }
@@ -30,14 +30,14 @@ class MemberController extends Controller {
 
   def unFollow(memberId: String) = AuthAction {
     implicit request => MemberModel.findById(memberId) match {
-      case None => BadRequest(CommonJson().create(MemberNotFound))
+      case None => BadRequest(createJson(MemberNotFound))
       case _ => {
         val loginMember: Member = getSessionUser(request).get
         loginMember.findFollowingId(memberId) match {
-          case None => BadRequest(CommonJson().create(UnFollowed))
+          case None => BadRequest(createJson(UnFollowed))
           case Some(followId) => {
             loginMember.unFollow(followId)
-            Ok(CommonJson().success)
+            Ok(successJson)
           }
         }
       }
