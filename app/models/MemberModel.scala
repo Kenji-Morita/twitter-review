@@ -2,16 +2,13 @@ package models
 
 import java.util
 
-import org.elasticsearch.action.get.GetResponse
 import org.elasticsearch.action.index.IndexResponse
-import play.api.libs.json.{Json, JsNull}
+import play.api.libs.json.{JsValue, Json, JsNull}
 import utils.ElasticsearchUtil
 import utils.PasswordUtil.crypt
 import com.sksamuel.elastic4s.ElasticDsl._
-import org.elasticsearch.action.search.SearchResponse
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -38,39 +35,35 @@ case class Member(memberId: String, screenName: String, displayName: String, pas
   //                                                                                Find
   //                                                                                ====
 
-  def findProfile: Option[Profile] = ElasticsearchUtil.process { client =>
-    val futureSearching: Future[GetResponse] = client.execute(get id memberId from "twitter/member")
-    Await.result(futureSearching, Duration.Inf) match {
-      case r if !r.isExists => None
-      case r => {
-        val source = r.getSource
-        source.get("profile").asInstanceOf[util.HashMap[String, Any]] match {
-          case null => None
-          case profile => Some(Profile(profile.get("iconId").asInstanceOf[String], profile.get("biography").asInstanceOf[String]))
+  def findProfile: Future[Option[Profile]] = ElasticsearchUtil.process { client =>
+    client.execute(get id memberId from "twitter/member").map { result =>
+      result.getSource.get("profile") match {
+        case null => None
+        case profileAny => {
+          val profile = profileAny.asInstanceOf[util.HashMap[String, Any]]
+          Some(Profile(profile.get("iconId").asInstanceOf[String], profile.get("biography").asInstanceOf[String]))
         }
       }
     }
   }
 
-  def findFollowingMemberIds: List[String] = ElasticsearchUtil.process { client =>
+  def findFollowingMemberIds: Future[List[String]] = ElasticsearchUtil.process { client =>
     client.execute(search in "twitter/follow" query {
       matches ("followFromId", memberId)
-    }).await.getHits.getHits match {
-      case hits if hits.isEmpty => List()
-      case hits => hits.map(_.getSource.get("followFromId").asInstanceOf[String]).toList
-    }
+    }).map(_.getHits.getHits.toList.map(_.getSource.get("followToId").asInstanceOf[String]))
   }
 
-  def findFollowersMemberIds: List[String] = ElasticsearchUtil.process { client =>
+  def findFollowersMemberIds: Future[List[String]] = ElasticsearchUtil.process { client =>
     client.execute(search in "twitter/follow" query {
       matches ("followToId", memberId)
-    }).await.getHits.getHits match {
-      case hits if hits.isEmpty => List()
-      case hits => hits.map(_.getSource.get("followFromId").asInstanceOf[String]).toList
-    }
+    }).map(_.getHits.getHits.toList.map(_.getSource.get("followFromId").asInstanceOf[String]))
   }
 
-  def findFollowingId(memberId: String): Option[String] = ElasticsearchUtil.process { client =>
+  // ===================================================================================
+  //                                                                              Exists
+  //                                                                              ======
+
+  def existsFollowing(memberId: String): Future[Option[String]] = ElasticsearchUtil.process { client =>
     client.execute(search in "twitter/follow" query {
       filteredQuery filter {
         andFilter(
@@ -78,19 +71,18 @@ case class Member(memberId: String, screenName: String, displayName: String, pas
           termFilter("followToId", memberId)
         )
       }
-    }).await.getHits.getHits match {
-      case hits if hits.isEmpty => None
-      case hits => Some(hits.head.getId)
+    }).map { result =>
+      result.getHits.getHits.headOption.map(_.getId)
     }
   }
 
   // ===================================================================================
   //                                                                              Follow
   //                                                                              ======
-  def follow(memberId: String): Unit = ElasticsearchUtil.process { client =>
+  def follow(followToId: String): Unit = ElasticsearchUtil.process { client =>
     client.execute(index into "twitter/follow" fields (
-      "followFromId" -> this.memberId,
-      "followToId" -> memberId
+      "followFromId" -> memberId,
+      "followToId" -> followToId
     ))
   }
 
@@ -101,31 +93,34 @@ case class Member(memberId: String, screenName: String, displayName: String, pas
   // ===================================================================================
   //                                                                             Convert
   //                                                                             =======
-  def toJsonStr: String = {
-    val profileJson = findProfile match {
-      case None => JsNull
-      case Some(profile) => Json.toJson(Map(
-        "biography" -> profile.biography,
-        "iconId" -> profile.iconId
-      ))
+  def toJson: Future[JsValue] = findProfile.map {
+    case None => JsNull
+    case Some(profile) => Json.toJson(Map(
+      "biography" -> profile.biography,
+      "iconId" -> profile.iconId
+    ))
+  }.flatMap { profile =>
+    findFollowingMemberIds.flatMap { following =>
+      findFollowersMemberIds.map { followers =>
+        Json.toJson(Map(
+          "memberId" -> Json.toJson(memberId),
+          "screenName" -> Json.toJson(screenName),
+          "displayName" -> Json.toJson(displayName),
+          "profile" -> profile,
+          "following" -> Json.toJson(Map(
+            "count" -> Json.toJson(following.size),
+            "list" -> Json.toJson(following)
+          )),
+          "followers" -> Json.toJson(Map(
+            "count" -> Json.toJson(followers.size),
+            "list" -> Json.toJson(followers)
+          ))
+        ))
+      }
     }
-    val following = findFollowingMemberIds
-    val followers = findFollowersMemberIds
-    Json.stringify(Json.toJson(Map(
-      "memberId" -> Json.toJson(memberId),
-      "screenName" -> Json.toJson(screenName),
-      "displayName" -> Json.toJson(displayName),
-      "profile" -> profileJson,
-      "following" -> Json.toJson(Map(
-        "count" -> Json.toJson(following.size),
-        "list" -> Json.toJson(following)
-      )),
-      "followers" -> Json.toJson(Map(
-        "count" -> Json.toJson(followers.size),
-        "list" -> Json.toJson(followers)
-      ))
-    )))
   }
+
+  def toJsonStr: Future[String] = toJson.map(Json.stringify)
 }
 
 case class Profile(iconId: String, biography: String)
@@ -138,6 +133,7 @@ object MemberModel {
   // ===================================================================================
   //                                                                          New member
   //                                                                          ==========
+
   def create(screenName: String, displayName: String, mail: String, password: String): Future[Member] = ElasticsearchUtil.process { client =>
     val cryptPassword = crypt(password)
     val futureSearching: Future[IndexResponse] = client.execute(index into "twitter/member" fields (
@@ -153,44 +149,22 @@ object MemberModel {
   //                                                                                Find
   //                                                                                ====
 
-  def findByScreenName(screenName: String): Option[Member] = createMemberBySingleKey("screenName", screenName)
+  def findByScreenName(screenName: String): Future[Option[Member]] = findMemberBySingleKey("screenName", screenName)
 
-  def findByMail(mail: String): Option[Member] = createMemberBySingleKey("mail", mail)
+  def findByMail(mail: String): Future[Option[Member]] = findMemberBySingleKey("mail", mail)
 
-  def findById(memberId: String): Option[Member] = ElasticsearchUtil.process { client =>
-    val futureSearching: Future[GetResponse] = client.execute(get id memberId from "twitter/member")
-    Await.result(futureSearching, Duration.Inf) match {
-      case r if !r.isExists => None
-      case r => {
-        val source = r.getSource
-        Some(Member(r.getId, source.get("screenName").asInstanceOf[String], source.get("displayName").asInstanceOf[String], source.get("password").asInstanceOf[String]))
-      }
-    }
-  }
+  def findById(memberId: String): Future[Option[Member]] = findMemberBySingleKey("_id", memberId)
 
   // ===================================================================================
   //                                                                              Helper
   //                                                                              ======
-  private def createMemberBySingleKey(key: String, value: String): Option[Member] = ElasticsearchUtil.process { client =>
-    val futureSearching: Future[SearchResponse] = client.execute(search in "twitter/member" query {
-      matches(key, value)
-    })
-    Await.result(futureSearching, Duration.Inf).getHits.getHits match {
-      case hits if hits.size > 0 => {
-        val hit = hits.head
-        val source = hit.getSource
-        Some(Member(hit.getId, source.get("screenName").asInstanceOf[String], source.get("displayName").asInstanceOf[String], source.get("password").asInstanceOf[String]))
-      }
-      case _ => None
-    }
-  }
 
-  private def createMemberBySingleKey(key: String, value: String): Option[Member] = ElasticsearchUtil.process { client =>
+  def findMemberBySingleKey(key: String, value: String): Future[Option[Member]] = ElasticsearchUtil.process { client =>
     client.execute(search in "twitter/member" query {
       matches(key, value)
-    }).map { result =>
-      
-      result.getHits.getHits.map(hit => Member())
-    }
+    }).map(_.getHits.getHits.headOption.map(hit => {
+      val source = hit.getSource
+      Some(Member(hit.getId, source.get("screenName").asInstanceOf[String], source.get("displayName").asInstanceOf[String], source.get("password").asInstanceOf[String]))
+    }).getOrElse(None))
   }
 }

@@ -1,23 +1,29 @@
-riot.tag('follow', '<div if="{opts.loginInfo.isLogin && !isMe}"><button if="{!isFollowing}" onclick="{doFollow}">Follow</button><button if="{isFollowing}" onclick="{doUnFollow}">Unfollow</button></div>', function(opts) {var _this = this;
+riot.tag('follow', '<div if="{opts.isLogin && !isMe}"><button if="{!isFollowing}" onclick="{doFollow}">Follow</button><button if="{isFollowing}" onclick="{doUnFollow}">Unfollow</button></div>', function(opts) {var _this = this;
 // ===================================================================================
 //                                                                          Attributes
 //                                                                          ==========
 var request = window.superagent;
 this.isFollowing = false;
-this.isMe = true;
-if (opts.loginInfo != undefined && opts.loginInfo.isLogin) {
-    if (opts.loginInfo.member.following.list.indexOf(opts.memberId) >= 0) {
-        this.isFollowing = true;
-    }
-    this.isMe = opts.loginInfo.member.memberId == opts.memberId;
-}
+this.isMe = false;
 // ===================================================================================
 //                                                                               Event
 //                                                                               =====
+if (opts.observable != undefined) {
+    opts.observable.on("onLoadMember", function (member) {
+        opts.member = member;
+        if (opts.isLogin) {
+            if (opts.loginMember.following.list.indexOf(member.memberId) >= 0) {
+                _this.isFollowing = true;
+            }
+            _this.isMe = opts.loginMember.memberId == member.memberId;
+            _this.update();
+        }
+    });
+}
 this.doFollow = function (e) {
     e.preventDefault();
     request
-        .post("/api/member/follow/" + opts.memberId)
+        .post("/api/member/follow/" + opts.member.memberId)
         .withCredentials()
         .end(function (error, response) {
         if (response.ok) {
@@ -29,15 +35,12 @@ this.doFollow = function (e) {
 this.doUnFollow = function (e) {
     e.preventDefault();
     request
-        .del("/api/member/unfollow/" + opts.memberId)
+        .del("/api/member/unfollow/" + opts.member.memberId)
         .withCredentials()
         .end(function (error, response) {
         if (response.ok) {
             _this.isFollowing = false;
             _this.update();
-        }
-        else {
-            console.log(response.text);
         }
     });
 };

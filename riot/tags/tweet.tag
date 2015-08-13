@@ -3,8 +3,8 @@
     <header>
       <img alt="memberIcon" src="/assets/icon/1">
       <dl>
-        <dt>{displayName}</dt>
-        <dd>@{screenName}</dd>
+        <dt>{opts.member.displayName}</dt>
+        <dd>@{opts.member.screenName}</dd>
       </dl>
       <follow></follow>
     </header>
@@ -19,16 +19,43 @@
     // ===================================================================================
     //                                                                             Declare
     //                                                                             =======
+
     declare var opts: any;
+    interface Window {
+      superagent: any;
+    }
 
     // ===================================================================================
     //                                                                          Attributes
     //                                                                          ==========
-    this.isRetweet = opts.tweet.reTweet != null;
+
+    var request = window.superagent;
+    this.isRetweet = false;
 
     // ===================================================================================
     //                                                                               Event
     //                                                                               =====
+
+    opts.observable.on("onLoadMember", member => {
+      opts.member = member;
+      this.update();
+    });
+
+    // ===================================================================================
+    //                                                                               Logic
+    //                                                                               =====
+
+    request
+      .get("/api/tweet/detail/" + opts.tweetId)
+      .end((error, response) => {
+        if(response.ok) {
+          var result = JSON.parse(response.text);
+          opts.tweet = result.value;
+          this.isRetweet = opts.tweet.reTweet != null;
+          this.update();
+          opts.findMemberDetail(opts.tweet.memberId);
+        }
+      });
 
   </script>
 </tweet>

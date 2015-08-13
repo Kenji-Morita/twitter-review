@@ -1,17 +1,22 @@
 package controllers.api
 
-import actions.AuthAction
-import controllers.ResponseCode._
-import models.{ConfirmHashModel, Member, MemberModel}
+import actions.AuthAction._
+
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import play.api.libs.json.{JsPath, Reads}
 import play.api.libs.json.Reads._
 import play.api.mvc.{Action, Controller}
-import utils.JsonUtil._
-import utils.MailUtil
+
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+
+import actions.AuthAction
+import controllers.ResponseCode._
+import models.{ConfirmHashModel, Member, MemberModel}
+import utils.JsonUtil._
+import utils.MailUtil
 
 case class SignUp(screenName: String, displayName: String, mail: String, password: String, passwordConfirm: String)
 case class SignIn(account: String,  password: String)
@@ -48,17 +53,20 @@ class AuthController extends Controller {
       }
   }
 
-  def confirm(memberId: String, hash: String) = Action {
+  def confirm(memberId: String, hash: String) = Action.async {
     implicit request =>
-      MemberModel.findById(memberId) match {
-        case None => NotFound(createJson(MemberNotFound))
-        case Some(member) => ConfirmHashModel.findHashValueByMemberId(member.memberId) match {
-          case None => BadRequest(createJson(HashNotFound))
-          case Some(hashObj) if !hashObj.isMatch(hash) => BadRequest(createJson(HashValuesNotMatch))
-          case Some(hashObj) => {
-            hashObj.complete
-            member.confirm
-            Ok(successJson)
+      MemberModel.findById(memberId).flatMap {
+        case None => Future.successful(NotFound(createJson(MemberNotFound)))
+        case Some(member) => {
+          ConfirmHashModel.findHashValueByMemberId(member.memberId).map { confirmHashOpt =>
+            confirmHashOpt match {
+              case None => BadRequest(createJson(HashValuesNotMatch))
+              case Some(confirmHash) => {
+                confirmHash.complete
+                member.confirm
+                Ok(successJson)
+              }
+            }
           }
         }
       }
@@ -71,18 +79,24 @@ class AuthController extends Controller {
           (JsPath \ "password").read[String]
         )(SignIn.apply _)
 
-      def matchPassword(member: Member, password: String) = Future.successful(member.isMatch(password) match {
+      def matchPassword(member: Member, password: String) = member.isMatch(password) match {
         case true => Ok(successJson).withSession(request.session + ("memberId" -> member.memberId))
         case false => BadRequest(createJson(SignInFailed))
-      })
+      }
 
       request.body.validate[SignIn] match {
-        case JsSuccess(value, path) => MemberModel.findByScreenName(value.account) match {
-          case None => MemberModel.findByMail(value.account) match {
-            case None => Future.successful(BadRequest(createJson(MemberNotFound)))
-            case Some(member) => matchPassword(member, value.password)
+        case JsSuccess(value, path) => MemberModel.findByScreenName(value.account).flatMap{ memberOptByName =>
+          memberOptByName match {
+            case None => {
+              MemberModel.findByMail(value.account).map { memberOptByMail =>
+                memberOptByMail match {
+                  case None => NotFound(createJson(MemberNotFound))
+                  case Some(member) => matchPassword(member, value.password)
+                }
+              }
+            }
+            case Some(member) => Future.successful(matchPassword(member, value.password))
           }
-          case Some(member) => matchPassword(member, value.password)
         }
         case e: JsError => Future.successful(BadRequest(createJson(ValidationError, JsError.toJson(e))))
       }
@@ -91,5 +105,12 @@ class AuthController extends Controller {
   def signOut = AuthAction {
     implicit request =>
       Ok(successJson).withSession(request.session - "memberId")
+  }
+
+  def memberDetail = AuthAction.async {
+    implicit request =>
+      getSessionMember(request).map { loginMember =>
+        Redirect(s"/api/member/detail/${loginMember.memberId}")
+      }
   }
 }

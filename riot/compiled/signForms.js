@@ -34,6 +34,9 @@ this.signUp = {
 //                                                                               =====
 this.toggle = function (e) {
     e.preventDefault();
+    // TODO demo
+    var sign = document.querySelector(".pg-sign");
+    sign.classList.toggle("hoge");
     _this.toggleState = !_this.toggleState;
 };
 this.doSignIn = function (e) {
@@ -50,7 +53,7 @@ this.doSignIn = function (e) {
     request
         .post("api/auth/signin")
         .withCredentials()
-        .send({ screenName: account, mail: account, password: password })
+        .send({ account: account, password: password })
         .set('Accept', 'application/json')
         .end(function (error, response) {
         if (response.ok) {

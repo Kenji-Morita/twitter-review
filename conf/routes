@@ -2,9 +2,6 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-# PreFlight
-OPTIONS     /*all                                       controllers.CommonController.preFlight(all: String)
-
 # Front
 GET         /                                           controllers.FrontController.index
 GET         /tweet/:tweetId                             controllers.FrontController.tweet(tweetId: String)
@@ -18,11 +15,13 @@ POST        /api/auth/signup                            controllers.api.AuthCont
 GET         /api/auth/confirm/:memberId/:hash           controllers.api.AuthController.confirm(memberId: String, hash: String)
 POST        /api/auth/signin                            controllers.api.AuthController.signIn
 POST        /api/auth/signout                           controllers.api.AuthController.signOut
+GET         /api/auth/member/detail                     controllers.api.AuthController.memberDetail
 ### DELETE      /api/auth/withdrawal                       controllers.api.AuthController.withdrawal
 
 # Member
-### GET         /api/member/detail/:memberId                controllers.api.MemberController.detail(memberId: String)
+GET         /api/member/detail/:memberId                controllers.api.MemberController.detail(memberId: String)
 ### GET         /api/member/following                       controllers.api.MemberController.following
+### GET         /api/member/followers                       controllers.api.MemberController.followers
 POST        /api/member/follow/:memberId                controllers.api.MemberController.follow(memberId: String)
 DELETE      /api/member/unfollow/:memberId              controllers.api.MemberController.unFollow(memberId: String)
 

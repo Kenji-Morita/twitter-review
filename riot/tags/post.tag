@@ -44,6 +44,7 @@
           if (response.ok) {
             textarea.value = "";
             updateTextareaView(textarea.value);
+            opts.observable.trigger("onPost");
           }
         });
     };

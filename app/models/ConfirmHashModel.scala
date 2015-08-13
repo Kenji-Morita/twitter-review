@@ -1,6 +1,10 @@
 package models
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import com.sksamuel.elastic4s.ElasticDsl._
+
 import utils.ElasticsearchUtil
 import utils.PasswordUtil.crypt
 
@@ -47,7 +51,7 @@ object ConfirmHashModel {
   //                                                                                Find
   //                                                                                ====
   
-  def findHashValueByMemberId(memberId: String): Option[ConfirmHash] = ElasticsearchUtil.process { client =>
+  def findHashValueByMemberId(memberId: String): Future[Option[ConfirmHash]] = ElasticsearchUtil.process { client =>
     client.execute(search in "twitter/hash" query {
       filteredQuery filter {
         andFilter(
@@ -55,12 +59,10 @@ object ConfirmHashModel {
           termFilter("used", false)
         )
       }
-    }).await.getHits.getHits match {
-      case hits if hits.isEmpty => None
-      case hits => {
-        val head = hits.head
-        val source = head.getSource
-        Some(ConfirmHash(head.id, source.get("memberId").asInstanceOf[String], source.get("hash").asInstanceOf[String]))
+    }).map { result =>
+      result.getHits.getHits.headOption.map { hit =>
+        val source = hit.getSource
+        ConfirmHash(hit.id, source.get("memberId").asInstanceOf[String], source.get("hash").asInstanceOf[String])
       }
     }
   }

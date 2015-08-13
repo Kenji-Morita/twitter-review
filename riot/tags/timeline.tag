@@ -12,6 +12,7 @@
     // ===================================================================================
     //                                                                             Declare
     //                                                                             =======
+
     declare var opts: any;
     declare var _: any;
     interface Window {
@@ -21,14 +22,24 @@
     // ===================================================================================
     //                                                                          Attributes
     //                                                                          ==========
+
     var request = window.superagent;
     this.tweets = [];
 
     // ===================================================================================
+    //                                                                               Event
+    //                                                                               =====
+
+    opts.observable.on("onPost", () => {
+      setTimeout(loadTweets, 1000);
+    })
+
+    // ===================================================================================
     //                                                                               Logic
     //                                                                               =====
+
     var loadTweets = () => {
-      var url = "/api/timeline/" + opts.target;
+      var url = "/api/timeline/" + opts.timeline.target;
       if (this.tweets.length > 0) {
         url += "?after=" + this.tweets[0].timestamp;
       }
@@ -54,8 +65,13 @@
             this.update();
           }
         });
-      setTimeout(loadTweets, 10000);
     };
-    loadTweets();
+
+    var looper = () => {
+      loadTweets();
+      setTimeout(looper, 10000);
+    }
+
+    looper();
   </script>
 </timeline>

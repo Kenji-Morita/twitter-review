@@ -14,7 +14,7 @@
 <body>
 
 <script>
-    var loginInfo = {isLogin: @{loginMember.nonEmpty}, member: @Html(loginMember.get.toJsonStr)};
+    var loginInfo = {isLogin: @{loginMember.nonEmpty}, member: null};
     var memberIds = {};
 
     riot.mount("commonheader", {loginInfo: loginInfo, memberIds: memberIds});

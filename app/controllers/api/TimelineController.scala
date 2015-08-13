@@ -1,12 +1,16 @@
 package controllers.api
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
+import play.api.mvc.{Action, Controller}
+
 import actions.AuthAction
 import actions.AuthAction._
-import models._
-import play.api.mvc.{Action, Controller}
-import utils.JsonUtil._
 import controllers.ResponseCode._
-import scala.concurrent.ExecutionContext.Implicits.global
+import models._
+import utils.JsonUtil._
+
+import scala.concurrent.Future
 
 /**
  * @author SAW
@@ -21,9 +25,14 @@ class TimelineController extends Controller {
       val afterTimestamp = request.getQueryString("after").map(_.toLong).getOrElse(Long.MinValue)
 
       // find timeline
-      val loginMember: Member = getSessionUser(request).get
-      val memberIds: List[String] = loginMember.memberId :: loginMember.findFollowingMemberIds
-      TimelineModel.findByMemberIds(memberIds, beforeTimestamp, afterTimestamp).map(t => Ok(createJson(NoReason, t)))
+      getSessionMember(request).flatMap { loginMember =>
+        val futureMemberIds: Future[List[String]] = loginMember.findFollowingMemberIds.map(loginMember.memberId :: _)
+        futureMemberIds.flatMap { memberIds =>
+          TimelineModel.findByMemberIds(memberIds, beforeTimestamp, afterTimestamp).map { tweet =>
+            Ok(createJson(NoReason, tweet.map(_.toJson)))
+          }
+        }
+      }
   }
 
   def member(memberId: String) = Action.async {
@@ -32,7 +41,10 @@ class TimelineController extends Controller {
       val beforeTimestamp = request.getQueryString("before").map(_.toLong).getOrElse(Long.MaxValue)
       val afterTimestamp = request.getQueryString("after").map(_.toLong).getOrElse(Long.MinValue)
 
+      // find timeline
       val memberIds: List[String] = List(memberId)
-      TimelineModel.findByMemberIds(memberIds, beforeTimestamp, afterTimestamp).map(t => Ok(createJson(NoReason, t)))
+      TimelineModel.findByMemberIds(memberIds, beforeTimestamp, afterTimestamp).map { tweet =>
+        Ok(createJson(NoReason, tweet.map(_.toJson)))
+      }
   }
 }

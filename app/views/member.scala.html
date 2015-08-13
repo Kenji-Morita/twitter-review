@@ -21,14 +21,18 @@
 <commonfooter></commonfooter>
 
 <script>
-    var loginInfo = {isLogin: @{loginMember.nonEmpty}, member: @Html(loginMember.get.toJsonStr)};
-    var memberJson = @Html(member.toJsonStr)
+    var common = riot.mount("commonheader", {isLogin: @{loginMember.nonEmpty}})[0];
 
-    riot.mount("commonheader", {loginInfo: loginInfo});
-    riot.mount("profileaside", {member: memberJson});
-    riot.mount("follow", {loginInfo: loginInfo, memberId: memberJson.memberId});
-    riot.mount("timeline", {target: "member/" + memberJson.memberId});
+    common.profile.loginMember = false;
+    common.profile.memberId = @{member.memberId};
+    common.timeline.target = "member/@{member.memberId}";
+
+    riot.mount("profileaside", common);
+    riot.mount("follow", common);
+    riot.mount("timeline", common);
     riot.mount("commonfooter");
+
+    common.loaded();
 </script>
 </body>
 </html>

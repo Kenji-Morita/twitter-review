@@ -22,13 +22,12 @@
 <commonfooter></commonfooter>
 
 <script>
-    var loginInfo = {isLogin: @{loginMember.nonEmpty}, member: @Html(loginMember.get.toJsonStr)};
-
-    riot.mount("commonheader", {loginInfo: loginInfo});
-    riot.mount("profileaside", {member: loginInfo.member});
-    riot.mount("post", {replyTo: null});
-    riot.mount("timeline", {target: "home"});
+    var common = riot.mount("commonheader", {isLogin: @{loginMember.nonEmpty}})[0];
+    riot.mount("profileaside", common);
+    riot.mount("post", common);
+    riot.mount("timeline", common);
     riot.mount("commonfooter");
+    common.loaded();
 </script>
 </body>
 </html>

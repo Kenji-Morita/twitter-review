@@ -16,7 +16,7 @@ object TimelineModel {
   // ===================================================================================
   //                                                                                Find
   //                                                                                ====
-  def findByMemberIds(memberIds: List[String], before: Long, after: Long): Future[List[JsValue]] = ElasticsearchUtil.process { client =>
+  def findByMemberIds(memberIds: List[String], before: Long, after: Long): Future[List[Tweet]] = ElasticsearchUtil.process { client =>
     client.execute(search in "twitter/tweet" fields "_timestamp" fields "_source" query {
       filteredQuery filter {
         andFilter(
@@ -27,8 +27,6 @@ object TimelineModel {
       }
     } sort (
       by field "_timestamp" order SortOrder.DESC
-    )).map{ result =>
-      result.getHits.getHits.toList.map(TweetModel.mapping(_).toJson)
-    }
+    )).map(_.getHits.getHits.toList.map(TweetModel.mapping(_)))
   }
 }

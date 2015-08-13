@@ -1,5 +1,5 @@
 <follow>
-  <div if={opts.loginInfo.isLogin && !isMe}>
+  <div if={opts.isLogin && !isMe}>
     <button if={!isFollowing} onclick={doFollow}>Follow</button>
     <button if={isFollowing} onclick={doUnFollow}>Unfollow</button>
   </div>
@@ -18,21 +18,28 @@
     //                                                                          ==========
     var request = window.superagent;
     this.isFollowing = false;
-    this.isMe = true;
-    if (opts.loginInfo != undefined && opts.loginInfo.isLogin) {
-      if (opts.loginInfo.member.following.list.indexOf(opts.memberId) >= 0) {
-        this.isFollowing = true;
-      }
-      this.isMe = opts.loginInfo.member.memberId == opts.memberId;
-    }
+    this.isMe = false;
 
     // ===================================================================================
     //                                                                               Event
     //                                                                               =====
+    if (opts.observable != undefined) {
+      opts.observable.on("onLoadMember", member => {
+        opts.member = member;
+        if (opts.isLogin) {
+          if (opts.loginMember.following.list.indexOf(member.memberId) >= 0) {
+            this.isFollowing = true;
+          }
+          this.isMe = opts.loginMember.memberId == member.memberId;
+          this.update();
+        }
+      });
+    }
+
     this.doFollow = e => {
       e.preventDefault();
       request
-        .post("/api/member/follow/" + opts.memberId)
+        .post("/api/member/follow/" + opts.member.memberId)
         .withCredentials()
         .end((error, response) => {
           if(response.ok) {
@@ -45,14 +52,12 @@
     this.doUnFollow = e => {
       e.preventDefault();
       request
-        .del("/api/member/unfollow/" + opts.memberId)
+        .del("/api/member/unfollow/" + opts.member.memberId)
         .withCredentials()
         .end((error, response) => {
           if(response.ok) {
             this.isFollowing = false;
             this.update();
-          } else {
-            console.log(response.text);
           }
         });
     };

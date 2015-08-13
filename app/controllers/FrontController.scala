@@ -1,60 +1,84 @@
 package controllers
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
+import play.api.mvc.{Action, Controller}
+
 import actions.AuthAction._
 import models.{MemberModel, TweetModel}
-import play.api.mvc.{Action, Controller}
 
 /**
  * @author SAW
  */
 class FrontController extends Controller {
 
-   def index = Action {
+   def index = Action.async {
      implicit request =>
-       getSessionUser(request) match {
-         case None => Ok(views.html.top(None))
-         case member => Ok(views.html.home(member))
+       getSessionMemberOpt(request).map { loginMemberOpt =>
+         loginMemberOpt match {
+           case None => Ok(views.html.top(None))
+           case member => Ok(views.html.home(member))
+         }
        }
    }
 
-  def tweet(tweetId: String) = Action {
+  def tweet(tweetId: String) = Action.async {
     implicit request =>
-      TweetModel.findById(tweetId) match {
-        case None => NotFound(views.html.tweet404(getSessionUser(request)))
-        case Some(tweet) if tweet.isDeleted => NotFound(views.html.tweet404(getSessionUser(request)))
-        case Some(tweet) => Ok(views.html.tweet(getSessionUser(request))(tweet))
+      getSessionMemberOpt(request).flatMap { loginMemberOpt =>
+        TweetModel.findById(tweetId).map { tweetOpt =>
+          tweetOpt match {
+            case None => NotFound(views.html.tweet404(loginMemberOpt))
+            case Some(tweet) if tweet.isDeleted => NotFound(views.html.tweet404(loginMemberOpt))
+            case Some(tweet) => Ok(views.html.tweet(loginMemberOpt)(tweet))
+          }
+        }
       }
   }
 
-  def member(memberId: String) = Action {
+  def member(memberId: String) = Action.async {
     implicit request =>
-      MemberModel.findById(memberId) match {
-        case None => NotFound(views.html.member404(getSessionUser(request)))
-        case Some(member) => Ok(views.html.member(getSessionUser(request))(member))
+      getSessionMemberOpt(request).flatMap { loginMemberOpt =>
+        MemberModel.findById(memberId).map { memberOpt =>
+          memberOpt match {
+            case None => NotFound(views.html.member404(loginMemberOpt))
+            case Some(member) => Ok(views.html.member(loginMemberOpt)(member))
+          }
+        }
       }
   }
 
-  def following(memberId: String) = Action {
+  def following(memberId: String) = Action.async {
     implicit request =>
-      MemberModel.findById(memberId) match {
-        case None => NotFound(views.html.member404(getSessionUser(request)))
-        case Some(member) => Ok(views.html.following(getSessionUser(request))(member))
+      getSessionMemberOpt(request).flatMap { loginMemberOpt =>
+        MemberModel.findById(memberId).map { memberOpt =>
+          memberOpt match {
+            case None => NotFound(views.html.member404(loginMemberOpt))
+            case Some(member) => Ok(views.html.following(loginMemberOpt)(member))
+          }
+        }
       }
   }
 
-  def followers(memberId: String) = Action {
+  def followers(memberId: String) = Action.async {
     implicit request =>
-      MemberModel.findById(memberId) match {
-        case None => NotFound(views.html.member404(getSessionUser(request)))
-        case Some(member) => Ok(views.html.followers(getSessionUser(request))(member))
+      getSessionMemberOpt(request).flatMap { loginMemberOpt =>
+        MemberModel.findById(memberId).map { memberOpt =>
+          memberOpt match
+          {
+            case None => NotFound(views.html.member404(loginMemberOpt))
+            case Some(member) => Ok(views.html.followers(loginMemberOpt)(member))
+          }
+        }
       }
   }
 
-  def setting = Action {
+  def setting = Action.async {
     implicit request =>
-      getSessionUser(request) match {
-        case None => Redirect("/")
-        case Some(member) => Ok
+      getSessionMemberOpt(request).map { loginMemberOpt =>
+        loginMemberOpt match {
+          case None => Redirect("/")
+          case Some(member) => Ok
+        }
       }
   }
 }

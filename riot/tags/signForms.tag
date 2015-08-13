@@ -35,6 +35,9 @@
     interface Window {
       superagent: any;
     }
+    interface Element {
+      addClassName: any;
+    }
 
     // ===================================================================================
     //                                                                          Attributes
@@ -75,6 +78,11 @@
     //                                                                               =====
     this.toggle = e => {
       e.preventDefault();
+
+      // TODO demo
+      var sign = document.querySelector(".pg-sign");
+      sign.classList.toggle("hoge");
+
       this.toggleState = !this.toggleState;
     }
 
@@ -94,7 +102,7 @@
       request
         .post("api/auth/signin")
         .withCredentials()
-        .send({screenName: account, mail: account, password: password})
+        .send({account: account, password: password})
         .set('Accept', 'application/json')
         .end((error, response) => {
           if (response.ok) {
