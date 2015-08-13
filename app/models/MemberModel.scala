@@ -184,4 +184,13 @@ object MemberModel {
       case _ => None
     }
   }
+
+  private def createMemberBySingleKey(key: String, value: String): Option[Member] = ElasticsearchUtil.process { client =>
+    client.execute(search in "twitter/member" query {
+      matches(key, value)
+    }).map { result =>
+      
+      result.getHits.getHits.map(hit => Member())
+    }
+  }
 }
