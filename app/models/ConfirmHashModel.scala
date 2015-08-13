@@ -11,16 +11,18 @@ import scala.concurrent.{Await, Future}
 /**
  * @author SAW
  */
-case class Hash(hashId: String, memberId: String, hashValue: String) {
+case class ConfirmHash(hashId: String, memberId: String, hashValue: String) {
 
   // ===================================================================================
   //                                                                               Match
   //                                                                               =====
+
   def isMatch(hash: String) = hashValue == hash
 
   // ===================================================================================
   //                                                                             Confirm
   //                                                                             =======
+
   def complete = ElasticsearchUtil.process { client =>
     client.execute(update id hashId in "twitter/hash" doc "used" -> true)
   }
@@ -29,11 +31,12 @@ case class Hash(hashId: String, memberId: String, hashValue: String) {
 /**
  * @author SAW
  */
-object HashModel {
+object ConfirmHashModel {
 
   // ===================================================================================
   //                                                                              Create
   //                                                                              ======
+
   def create(member: Member): String = ElasticsearchUtil.process { client =>
     val input = member.screenName + member.password + member.memberId
     val hash = crypt(input)
@@ -47,7 +50,8 @@ object HashModel {
   // ===================================================================================
   //                                                                                Find
   //                                                                                ====
-  def findHashValueByMemberId(memberId: String): Option[Hash] = ElasticsearchUtil.process { client =>
+  
+  def findHashValueByMemberId(memberId: String): Option[ConfirmHash] = ElasticsearchUtil.process { client =>
     client.execute(search in "twitter/hash" query {
       filteredQuery filter {
         andFilter(
@@ -60,7 +64,7 @@ object HashModel {
       case hits => {
         val head = hits.head
         val source = head.getSource
-        Some(Hash(head.id, source.get("memberId").asInstanceOf[String], source.get("hash").asInstanceOf[String]))
+        Some(ConfirmHash(head.id, source.get("memberId").asInstanceOf[String], source.get("hash").asInstanceOf[String]))
       }
     }
   }

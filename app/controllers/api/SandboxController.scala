@@ -2,7 +2,7 @@ package controllers.api
 
 
 import actions.AuthAction
-import controllers.{ResponseCode, CommonJson}
+import controllers.ResponseCode
 import play.api.libs.json.{JsPath, Writes}
 import play.api.mvc.{Action, Controller}
 import play.api.libs.functional.syntax._

@@ -2,7 +2,7 @@ package controllers.api
 
 import actions.AuthAction
 import controllers.ResponseCode._
-import models.{HashModel, Member, MemberModel}
+import models.{ConfirmHashModel, Member, MemberModel}
 import play.api.libs.functional.FunctionalBuilder
 import play.api.libs.json.{JsPath, Reads}
 import play.api.libs.json.Reads._
@@ -45,7 +45,7 @@ class AuthController extends Controller {
           case true => {
             val memberFuture = MemberModel.create(value.screenName, value.displayName, value.mail, value.password)
             memberFuture.map{ member =>
-              val hash = HashModel.create(member)
+              val hash = ConfirmHashModel.create(member)
               val url = s"http://${request.domain}/api/auth/confirm/${member.memberId}/$hash"
               MailUtil.createSignUpMessage(value.screenName, url).sendTo(value.mail)
               Ok(successJson)
@@ -61,7 +61,7 @@ class AuthController extends Controller {
     implicit request =>
       MemberModel.findById(memberId) match {
         case None => NotFound(createJson(MemberNotFound))
-        case Some(member) => HashModel.findHashValueByMemberId(member.memberId) match {
+        case Some(member) => ConfirmHashModel.findHashValueByMemberId(member.memberId) match {
           case None => BadRequest(createJson(HashNotFound))
           case Some(hashObj) if !hashObj.isMatch(hash) => BadRequest(createJson(HashValuesNotMatch))
           case Some(hashObj) => {

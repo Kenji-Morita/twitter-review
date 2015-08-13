@@ -30,6 +30,7 @@ case class Tweet(tweetId: String, memberId: String, text: Option[String], timest
   // ===================================================================================
   //                                                                          Attributes
   //                                                                          ==========
+
   val reTweet: Option[Tweet] = retweetFromId match {
     case None => None
     case _ => TweetModel.findById(retweetFromId.get)
@@ -53,6 +54,7 @@ case class Tweet(tweetId: String, memberId: String, text: Option[String], timest
   // ===================================================================================
   //                                                                   Compare timestamp
   //                                                                   =================
+
   def isBefore(targetTimestamp: Long): Boolean = timestamp <= targetTimestamp
 
   def isAfter(targetTimestamp: Long): Boolean = timestamp > targetTimestamp
@@ -60,6 +62,7 @@ case class Tweet(tweetId: String, memberId: String, text: Option[String], timest
   // ===================================================================================
   //                                                                             Convert
   //                                                                             =======
+
   def toObject: TweetObject = TweetObject(tweetId, memberId, text, timestamp, replyToId)
 
   def toJson = Json.toJson(Map(
@@ -82,6 +85,7 @@ object TweetModel {
   // ===================================================================================
   //                                                                                Find
   //                                                                                ====
+
   def findById(targetTweetId: String): Option[Tweet] = ElasticsearchUtil.process { client =>
     val futureSearching: Future[SearchResponse] = client.execute(search in "twitter/tweet" fields "_timestamp" fields "_source" query {
       matches ("_id", targetTweetId)
@@ -95,6 +99,7 @@ object TweetModel {
   // ===================================================================================
   //                                                                                  Do
   //                                                                                  ==
+
   def tweet(authorMemberId: String, text: String): Future[String] = ElasticsearchUtil.process { client =>
     client.execute(index into "twitter/tweet" fields (
       "memberId" -> authorMemberId,
@@ -105,13 +110,11 @@ object TweetModel {
 
   def reply(authorMemberId: String, text: String, tweet: Tweet): Option[String] = ElasticsearchUtil.process { client =>
     // TODO SAW implement
-    validateText(text)
     None
   }
 
   def reTweet(authorMemberId: String, text: String, tweet: Tweet): Option[String] = ElasticsearchUtil.process { client =>
     // TODO SAW implement
-    validateText(text)
     None
   }
 
@@ -122,11 +125,6 @@ object TweetModel {
   // ===================================================================================
   //                                                                              Helper
   //                                                                              ======
-  def validateText(text: String): Boolean = text.length match {
-    case l if l > 140 => throw new Exception("Tweet text length over 140 words")
-    case l if l == 0 => throw new Exception("Tweet text is empty")
-    case _ => true
-  }
 
   def mapping(hit: SearchHit): Tweet = {
     val source: util.Map[String, AnyRef] = hit.getSource
