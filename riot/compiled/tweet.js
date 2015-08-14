@@ -10,23 +10,15 @@ this.isRetweet = false;
 // ===================================================================================
 //                                                                               Event
 //                                                                               =====
-opts.observable.on("onLoadMember", function (member) {
-    opts.member = member;
-    _this.update();
-});
-// ===================================================================================
-//                                                                               Logic
-//                                                                               =====
-request
-    .get("/api/tweet/detail/" + opts.tweetId)
-    .end(function (error, response) {
-    if (response.ok) {
-        var result = JSON.parse(response.text);
-        opts.tweet = result.value;
-        _this.isRetweet = opts.tweet.reTweet != null;
+if (opts.observable != undefined) {
+    opts.observable.on("onLoadTweet", function (tweet) {
         _this.update();
         opts.findMemberDetail(opts.tweet.memberId);
-    }
-});
+    });
+    opts.observable.on("onLoadMember", function (member) {
+        opts.member = member;
+        _this.update();
+    });
+}
 
 });

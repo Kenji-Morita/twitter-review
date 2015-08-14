@@ -155,10 +155,6 @@ object MemberModel {
 
   def findById(memberId: String): Future[Option[Member]] = findMemberBySingleKey("_id", memberId)
 
-  // ===================================================================================
-  //                                                                              Helper
-  //                                                                              ======
-
   def findMemberBySingleKey(key: String, value: String): Future[Option[Member]] = ElasticsearchUtil.process { client =>
     client.execute(search in "twitter/member" query {
       matches(key, value)
@@ -166,5 +162,14 @@ object MemberModel {
       val source = hit.getSource
       Some(Member(hit.getId, source.get("screenName").asInstanceOf[String], source.get("displayName").asInstanceOf[String], source.get("password").asInstanceOf[String]))
     }).getOrElse(None))
+  }
+
+  def findByIdList(memberIdList: List[String]): Future[List[Member]] = ElasticsearchUtil.process { client =>
+    client.execute(search in "twitter/member" query {
+      filteredQuery filter termsFilter("_id",memberIdList:_*)
+    }).map(_.getHits.getHits.toList.map(hit => {
+      val source = hit.getSource
+      Member(hit.getId, source.get("screenName").asInstanceOf[String], source.get("displayName").asInstanceOf[String], source.get("password").asInstanceOf[String])
+    }))
   }
 }

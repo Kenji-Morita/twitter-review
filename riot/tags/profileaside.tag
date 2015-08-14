@@ -2,13 +2,13 @@
 
   <aside class="pg-profile">
         <img src="/assets/icon/1">
-        <h2>{opts.member.displayName}</h2>
-        <p>{opts.member.biography}</p>
+        <h2>{member.displayName}</h2>
+        <p>{member.biography}</p>
         <dl>
             <dt>Followings</dt>
-            <dd><a href="/following/{opts.member.memberId}">{opts.member.following.count}</a></dd>
+            <dd><a href="/following/{member.memberId}">{member.following.count}</a></dd>
             <dt>Followers</dt>
-            <dd><a href="/followers/{opts.member.memberId}">{opts.member.followers.count}</a></dd>
+            <dd><a href="/followers/{member.memberId}">{member.followers.count}</a></dd>
         </dl>
     </aside>
 
@@ -27,30 +27,22 @@
     //                                                                          ==========
 
     var request = window.superagent;
+    this.member = (opts.timeline.targetId == null) ? opts.loginMember : opts.member;
 
     // ===================================================================================
     //                                                                               Event
     //                                                                               =====
 
     if (opts.observable != undefined) {
-      if (opts.profile.loginMember) {
-        opts.loaded();
-      } else {
-        opts.findMemberDetail(opts.profile.memberId);
-      }
-
-      opts.observable.on("onLoadMember", member => {
-        opts.member = member;
+      opts.observable.on("onLoadLoginMember", loginMember => {
+        this.member = loginMember;
         this.update();
       });
-    }
 
-    // ===================================================================================
-    //                                                                               Logic
-    //                                                                               =====
-
-    if (opts.profile.loginMember && opts.loginMember) {
-      opts.member = opts.loginMember;
+      opts.observable.on("onLoadMember", member => {
+        this.member = member;
+        this.update();
+      });
     }
   </script>
 

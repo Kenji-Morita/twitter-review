@@ -6,10 +6,11 @@
     <meta charset="UTF-8">
     <title>SAW Twitter | Member</title>
     <link href="/assets/stylesheets/normalize.css" rel="stylesheet" />
+    <link href="/assets/stylesheets/style.css" rel="stylesheet" />
     <script src="/assets/javascripts/lodash.min.js"></script>
     <script src="/assets/javascripts/superagent.js"></script>
     <script src="/assets/javascripts/riot.min.js"></script>
-    <script src="/assets/javascripts/tag.min.js"></script>
+    <script src="/assets/javascripts/tag.js"></script>
 </head>
 <body>
 <commonheader></commonheader>
@@ -22,17 +23,13 @@
 
 <script>
     var common = riot.mount("commonheader", {isLogin: @{loginMember.nonEmpty}})[0];
-
-    common.profile.loginMember = false;
-    common.profile.memberId = @{member.memberId};
-    common.timeline.target = "member/@{member.memberId}";
-
+    common.timeline.targetId = "@{member.memberId}";
     riot.mount("profileaside", common);
     riot.mount("follow", common);
     riot.mount("timeline", common);
     riot.mount("commonfooter");
-
-    common.loaded();
+    common.findLoginMemberDetail();
+    common.findMemberDetail(@{member.memberId});
 </script>
 </body>
 </html>

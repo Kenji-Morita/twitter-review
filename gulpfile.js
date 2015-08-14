@@ -6,12 +6,16 @@ var uglify      = require("gulp-uglify");
 var sass        = require("gulp-sass");
 
 gulp.task("riot", function() {
-  return gulp.src("riot/tags/*.tag")
+  var stream = gulp.src("riot/tags/*.tag")
+    .on("error", function() {
+      console.log("==============> hoge");
+    })
     .pipe(riot({
       compact: true,
       type: "typescript"
     }))
     .pipe(gulp.dest("riot/compiled"));
+  return stream;
 });
 
 gulp.task("concat", function() {
@@ -36,9 +40,15 @@ gulp.task("build-riot", function() {
 });
 
 gulp.task("build-sass", function() {
-  return gulp.src("sass/*.scss")
-    .pipe(sass())
-    .pipe(gulp.dest("public/stylesheets"));
+  var streamSass = sass();
+  var stream = gulp.src("sass/*.scss")
+    .pipe(streamSass)
+    .pipe(gulp.dest("public/stylesheets"))
+  streamSass.on("error", function() {
+    console.log("sass failed");
+    stream.end();
+  });
+  return stream;
 });
 
 gulp.task("watch", function() {

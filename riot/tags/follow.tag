@@ -26,13 +26,12 @@
     if (opts.observable != undefined) {
       opts.observable.on("onLoadMember", member => {
         opts.member = member;
-        if (opts.isLogin) {
-          if (opts.loginMember.following.list.indexOf(member.memberId) >= 0) {
-            this.isFollowing = true;
-          }
-          this.isMe = opts.loginMember.memberId == member.memberId;
-          this.update();
-        }
+        setupFollowStatus();
+      });
+
+      opts.observable.on("onLoadLoginMember", loginMember => {
+        opts.loginMember = loginMember;
+        setupFollowStatus();
       });
     }
 
@@ -60,6 +59,20 @@
             this.update();
           }
         });
+    };
+
+    // ===================================================================================
+    //                                                                               Logic
+    //                                                                               =====
+
+    var setupFollowStatus = () => {
+      if (opts.isLogin && opts.loginMember != undefined && opts.member != undefined) {
+        if (opts.loginMember.following.list.indexOf(opts.member.memberId) >= 0) {
+          this.isFollowing = true;
+        }
+        this.isMe = opts.loginMember.memberId == opts.member.memberId;
+        this.update();
+      }
     };
   </script>
 </follow>

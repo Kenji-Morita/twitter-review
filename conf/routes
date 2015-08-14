@@ -20,6 +20,7 @@ GET         /api/auth/member/detail                     controllers.api.AuthCont
 
 # Member
 GET         /api/member/detail/:memberId                controllers.api.MemberController.detail(memberId: String)
+POST        /api/member/details                         controllers.api.MemberController.detailList
 ### GET         /api/member/following                       controllers.api.MemberController.following
 ### GET         /api/member/followers                       controllers.api.MemberController.followers
 POST        /api/member/follow/:memberId                controllers.api.MemberController.follow(memberId: String)

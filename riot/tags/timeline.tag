@@ -31,46 +31,46 @@
     //                                                                               =====
 
     opts.observable.on("onPost", () => {
-      setTimeout(loadTweets, 1000);
-    })
+      setTimeout(callFindTimeline, 1000);
+    });
+
+    opts.observable.on("onLoadTimeline", timeline => {
+      var memberIds = [];
+      this.tweets = _
+        .chain(timeline)
+        .map(json => {
+          memberIds.push(json.memberId);
+          return {
+            memberId: json.memberId,
+            tweetId: json.tweetId,
+            text: json.text,
+            postedAt: json.postedAt,
+            timestamp: json.timestamp,
+            reTweet: json.reTweet
+          };
+        })
+        .concat(this.tweets)
+        .value();
+      this.update();
+      opts.findMemberDetailList(memberIds);
+    });
 
     // ===================================================================================
     //                                                                               Logic
     //                                                                               =====
 
-    var loadTweets = () => {
-      var url = "/api/timeline/" + opts.timeline.target;
+    var callFindTimeline = () => {
       if (this.tweets.length > 0) {
-        url += "?after=" + this.tweets[0].timestamp;
+        opts.findTimeline(opts.timeline.targetId, null, this.tweets[0].timestamp);
+      } else {
+        opts.findTimeline(opts.timeline.targetId);
       }
-      request
-        .get(url)
-        .withCredentials()
-        .end((error, response) => {
-          if (response.ok) {
-            var result = JSON.parse(response.text);
-            this.tweets = _
-              .chain(result.value)
-              .map(json => {
-                return {
-                  memberId: json.memberId,
-                  tweetId: json.tweetId,
-                  text: json.text,
-                  postedAt: json.postedAt,
-                  timestamp: json.timestamp
-                };
-              })
-              .concat(this.tweets)
-              .value();
-            this.update();
-          }
-        });
     };
 
     var looper = () => {
-      loadTweets();
+      callFindTimeline();
       setTimeout(looper, 10000);
-    }
+    };
 
     looper();
   </script>

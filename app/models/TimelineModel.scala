@@ -2,7 +2,6 @@ package models
 
 import com.sksamuel.elastic4s.ElasticDsl._
 import org.elasticsearch.search.sort.SortOrder
-import play.api.libs.json.JsValue
 import utils.ElasticsearchUtil
 
 import scala.concurrent.Future

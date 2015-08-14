@@ -11,13 +11,11 @@ this.isMe = false;
 if (opts.observable != undefined) {
     opts.observable.on("onLoadMember", function (member) {
         opts.member = member;
-        if (opts.isLogin) {
-            if (opts.loginMember.following.list.indexOf(member.memberId) >= 0) {
-                _this.isFollowing = true;
-            }
-            _this.isMe = opts.loginMember.memberId == member.memberId;
-            _this.update();
-        }
+        setupFollowStatus();
+    });
+    opts.observable.on("onLoadLoginMember", function (loginMember) {
+        opts.loginMember = loginMember;
+        setupFollowStatus();
     });
 }
 this.doFollow = function (e) {
@@ -43,6 +41,18 @@ this.doUnFollow = function (e) {
             _this.update();
         }
     });
+};
+// ===================================================================================
+//                                                                               Logic
+//                                                                               =====
+var setupFollowStatus = function () {
+    if (opts.isLogin && opts.loginMember != undefined && opts.member != undefined) {
+        if (opts.loginMember.following.list.indexOf(opts.member.memberId) >= 0) {
+            _this.isFollowing = true;
+        }
+        _this.isMe = opts.loginMember.memberId == opts.member.memberId;
+        _this.update();
+    }
 };
 
 });

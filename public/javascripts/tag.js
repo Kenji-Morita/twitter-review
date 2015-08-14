@@ -1,7 +1,7 @@
 riot.tag('commonfooter', '<footer class="sg-footer"><div class="sg-container"><p>(c)2015 SAW</p></div></footer>', function(opts) {
 });
 
-riot.tag('commonheader', '<header class="sg-header"><div class="sg-container"><ul class="sg-header-contents"><li><h1><a href="/">SAW Twitter</a></h1></li><li if="{opts.isLogin}"><a href="#">Setting</a><ul><li><a href="#">Setting</a></li><li><a href="#" onclick="{doSignOut}">Sign out</a></li></ul></li></ul></div></header>', function(opts) {// ===================================================================================
+riot.tag('commonheader', '<header class="sg-header"><ul class="sg-header-contents"><li><h1><a href="/">SAW Twitter</a></h1></li><li class="sg-header-post" if="{opts.isLogin}"><postshare></postshare></li><li class="sg-header-menu" if="{opts.isLogin}"><a href="#" onclick="{doSignOut}">Sign out</a></li></ul></header>', function(opts) {// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
@@ -48,40 +48,120 @@ this.findMemberDetail = function (memberId) {
         });
     }
 };
-this.loaded = function () {
-    if (opts.isLogin) {
-        var loginMemberKey = "loginMember";
-        var existsData = localStorage.getItem(loginMemberKey);
-        if (existsData) {
-            _this.loginMember = JSON.parse(existsData);
-            _this.observable.trigger("onLoadLoginMember", _this.loginMember);
+this.findMemberDetailList = function (memberIds) {
+    var unknownIds = _
+        .chain(memberIds)
+        .uniq()
+        .filter(function (memberId) {
+        var existsData = localStorage.getItem(memberKeyPrefix + memberId);
+        return !existsData;
+    })
+        .value();
+    // request
+    if (unknownIds.length > 0) {
+        request
+            .post("/api/member/details")
+            .send({ memberIdList: unknownIds })
+            .end(function (error, response) {
+            if (response.ok) {
+                var memberJsons = JSON.parse(response.text).value;
+                memberJsons.forEach(function (json) {
+                    var jsonStr = JSON.stringify(json);
+                    localStorage.setItem(memberKeyPrefix + json.memberId, jsonStr);
+                });
+            }
+        });
+    }
+    // event fire
+    var memberDetailList = _
+        .chain(memberIds)
+        .uniq()
+        .map(function (memberId) {
+        return localStorage.getItem(memberKeyPrefix + memberId);
+    })
+        .value();
+    _this.observable.trigger("onLoadMemberList", memberDetailList);
+};
+this.findLoginMemberDetail = function () {
+    if (!opts.isLogin) {
+        return;
+    }
+    var loginMemberKey = "loginMember";
+    var existsData = localStorage.getItem(loginMemberKey);
+    if (existsData) {
+        _this.loginMember = JSON.parse(existsData);
+        _this.observable.trigger("onLoadLoginMember", _this.loginMember);
+    }
+    else {
+        request
+            .get("/api/auth/member/detail")
+            .withCredentials()
+            .end(function (error, response) {
+            if (response.ok) {
+                _this.loginMember = JSON.parse(response.text).value;
+                _this.observable.trigger("onLoadLoginMember", _this.loginMember);
+                var loginMemberJsonStr = JSON.stringify(_this.loginMember);
+                localStorage.setItem(loginMemberKey, loginMemberJsonStr);
+                localStorage.setItem(memberKeyPrefix + _this.loginMember.memberId, loginMemberJsonStr);
+            }
+        });
+    }
+};
+this.findTweetDetail = function (tweetId) {
+    request
+        .get("/api/tweet/detail/" + tweetId)
+        .end(function (error, response) {
+        if (response.ok) {
+            var result = JSON.parse(response.text);
+            _this.tweet = result.value;
+            _this.observable.trigger("onLoadTweet", _this.tweet);
+        }
+    });
+};
+this.findTimeline = function (memberId, before, after) {
+    // set target
+    var url = "/api/timeline/";
+    if (memberId == null) {
+        url += "home";
+    }
+    else {
+        url += "member/" + memberId;
+    }
+    // set url parameter
+    var existsParameter = false;
+    var addParameter = function (key, value) {
+        if (!existsParameter) {
+            url += "?";
+            existsParameter = true;
         }
         else {
-            request
-                .get("/api/auth/member/detail")
-                .withCredentials()
-                .end(function (error, response) {
-                if (response.ok) {
-                    _this.loginMember = JSON.parse(response.text).value;
-                    _this.observable.trigger("onLoadLoginMember", _this.loginMember);
-                    var loginMemberJsonStr = JSON.stringify(_this.loginMember);
-                    localStorage.setItem(loginMemberKey, loginMemberJsonStr);
-                    localStorage.setItem(memberKeyPrefix + _this.loginMember.memberId, loginMemberJsonStr);
-                }
-            });
+            url += "&";
         }
+        url += key + "=" + value;
+    };
+    if (before != null) {
+        addParameter("before", before);
     }
+    if (after != null) {
+        addParameter("after", after);
+    }
+    // request timeline
+    request
+        .get(url)
+        .withCredentials()
+        .end(function (error, response) {
+        if (response.ok) {
+            var timeline = JSON.parse(response.text).value;
+            _this.observable.trigger("onLoadTimeline", timeline);
+        }
+    });
 };
 // ===================================================================================
 //                                                                               Mixin
 //                                                                               =====
 this.mixin({
-    profile: {
-        loginMember: true,
-        memberId: null
-    },
     timeline: {
-        target: "home"
+        targetId: null
     }
 });
 
@@ -100,13 +180,11 @@ this.isMe = false;
 if (opts.observable != undefined) {
     opts.observable.on("onLoadMember", function (member) {
         opts.member = member;
-        if (opts.isLogin) {
-            if (opts.loginMember.following.list.indexOf(member.memberId) >= 0) {
-                _this.isFollowing = true;
-            }
-            _this.isMe = opts.loginMember.memberId == member.memberId;
-            _this.update();
-        }
+        setupFollowStatus();
+    });
+    opts.observable.on("onLoadLoginMember", function (loginMember) {
+        opts.loginMember = loginMember;
+        setupFollowStatus();
     });
 }
 this.doFollow = function (e) {
@@ -133,7 +211,22 @@ this.doUnFollow = function (e) {
         }
     });
 };
+// ===================================================================================
+//                                                                               Logic
+//                                                                               =====
+var setupFollowStatus = function () {
+    if (opts.isLogin && opts.loginMember != undefined && opts.member != undefined) {
+        if (opts.loginMember.following.list.indexOf(opts.member.memberId) >= 0) {
+            _this.isFollowing = true;
+        }
+        _this.isMe = opts.loginMember.memberId == opts.member.memberId;
+        _this.update();
+    }
+};
 
+});
+
+riot.tag('post-share', '', function(opts) {
 });
 
 riot.tag('post', '<form onsubmit="{doPostTweet}" class="sg-post-tweet"><p>tweet length: {tweetLength}</p><textarea oninput="{doInputTweet}"></textarea><button __disabled="{textLengthInvalid}">Tweet</button></form>', function(opts) {var _this = this;
@@ -183,10 +276,52 @@ var updateTextareaView = function (text) {
 
 });
 
+riot.tag('postshare', '<form onsubmit="{doPost}" class="{sg-header-post-inputting: isShowComment}"><input type="text" placeholder="share URL" oninput="{doInputURL}"><textarea placeholder="with comment (option)" oninput="{doInputComment}" class="{sg-header-post-inputting: isShowComment}"></textarea><div class="{sg-header-post-submit-inputting: isShowComment}"><p class="{sg-header-post-submit-over: commentLength > 140}">{commentLength}</p><button>Post</button></div></form>', function(opts) {// ===================================================================================
+//                                                                          Attributes
+//                                                                          ==========
+var _this = this;
+this.commentLength = 0;
+this.isShowComment = false;
+// ===================================================================================
+//                                                                               Event
+//                                                                               =====
+this.doInputURL = function (e) {
+    var url = e.target.value;
+    if (url.length > 0) {
+        _this.isShowComment = true;
+        _this.update();
+    }
+    else {
+        _this.isInputWait = false;
+        var form = e.srcElement.parentElement;
+        var textarea = form.querySelector("textarea");
+        var submitBox = form.querySelector("div");
+        textarea.classList.add("sg-header-post-removing");
+        submitBox.classList.add("sg-header-submit-removing");
+        _this.update();
+        setTimeout(function () {
+            _this.isShowComment = false;
+            textarea.classList.remove("sg-header-post-removing");
+            submitBox.classList.remove("sg-header-submit-removing");
+            _this.update();
+        }, 330);
+    }
+};
+this.doInputComment = function (e) {
+    var textarea = e.target;
+    _this.commentLength = textarea.value.length;
+    _this.update();
+};
+this.doPost = function (e) {
+    e.preventDefault();
+};
+
+});
+
 riot.tag('profileaside', '', function(opts) {
 });
 
-riot.tag('profileaside', '<aside class="pg-profile"><img src="/assets/icon/1"><h2>{opts.member.displayName}</h2><p>{opts.member.biography}</p><dl><dt>Followings</dt><dd><a href="/following/{opts.member.memberId}">{opts.member.following.count}</a></dd><dt>Followers</dt><dd><a href="/followers/{opts.member.memberId}">{opts.member.followers.count}</a></dd></dl></aside>', function(opts) {// ===================================================================================
+riot.tag('profileaside', '<aside class="pg-profile"><img src="/assets/icon/1"><h2>{member.displayName}</h2><p>{member.biography}</p><dl><dt>Followings</dt><dd><a href="/following/{member.memberId}">{member.following.count}</a></dd><dt>Followers</dt><dd><a href="/followers/{member.memberId}">{member.followers.count}</a></dd></dl></aside>', function(opts) {// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
@@ -194,26 +329,19 @@ var _this = this;
 //                                                                          Attributes
 //                                                                          ==========
 var request = window.superagent;
+this.member = (opts.timeline.targetId == null) ? opts.loginMember : opts.member;
 // ===================================================================================
 //                                                                               Event
 //                                                                               =====
 if (opts.observable != undefined) {
-    if (opts.profile.loginMember) {
-        opts.loaded();
-    }
-    else {
-        opts.findMemberDetail(opts.profile.memberId);
-    }
-    opts.observable.on("onLoadMember", function (member) {
-        opts.member = member;
+    opts.observable.on("onLoadLoginMember", function (loginMember) {
+        _this.member = loginMember;
         _this.update();
     });
-}
-// ===================================================================================
-//                                                                               Logic
-//                                                                               =====
-if (opts.profile.loginMember && opts.loginMember) {
-    opts.member = opts.loginMember;
+    opts.observable.on("onLoadMember", function (member) {
+        _this.member = member;
+        _this.update();
+    });
 }
 
 });
@@ -328,41 +456,41 @@ this.tweets = [];
 //                                                                               Event
 //                                                                               =====
 opts.observable.on("onPost", function () {
-    setTimeout(loadTweets, 1000);
+    setTimeout(callFindTimeline, 1000);
+});
+opts.observable.on("onLoadTimeline", function (timeline) {
+    var memberIds = [];
+    _this.tweets = _
+        .chain(timeline)
+        .map(function (json) {
+        memberIds.push(json.memberId);
+        return {
+            memberId: json.memberId,
+            tweetId: json.tweetId,
+            text: json.text,
+            postedAt: json.postedAt,
+            timestamp: json.timestamp,
+            reTweet: json.reTweet
+        };
+    })
+        .concat(_this.tweets)
+        .value();
+    _this.update();
+    opts.findMemberDetailList(memberIds);
 });
 // ===================================================================================
 //                                                                               Logic
 //                                                                               =====
-var loadTweets = function () {
-    var url = "/api/timeline/" + opts.timeline.target;
+var callFindTimeline = function () {
     if (_this.tweets.length > 0) {
-        url += "?after=" + _this.tweets[0].timestamp;
+        opts.findTimeline(opts.timeline.targetId, null, _this.tweets[0].timestamp);
     }
-    request
-        .get(url)
-        .withCredentials()
-        .end(function (error, response) {
-        if (response.ok) {
-            var result = JSON.parse(response.text);
-            _this.tweets = _
-                .chain(result.value)
-                .map(function (json) {
-                return {
-                    memberId: json.memberId,
-                    tweetId: json.tweetId,
-                    text: json.text,
-                    postedAt: json.postedAt,
-                    timestamp: json.timestamp
-                };
-            })
-                .concat(_this.tweets)
-                .value();
-            _this.update();
-        }
-    });
+    else {
+        opts.findTimeline(opts.timeline.targetId);
+    }
 };
 var looper = function () {
-    loadTweets();
+    callFindTimeline();
     setTimeout(looper, 10000);
 };
 looper();
@@ -381,23 +509,15 @@ this.isRetweet = false;
 // ===================================================================================
 //                                                                               Event
 //                                                                               =====
-opts.observable.on("onLoadMember", function (member) {
-    opts.member = member;
-    _this.update();
-});
-// ===================================================================================
-//                                                                               Logic
-//                                                                               =====
-request
-    .get("/api/tweet/detail/" + opts.tweetId)
-    .end(function (error, response) {
-    if (response.ok) {
-        var result = JSON.parse(response.text);
-        opts.tweet = result.value;
-        _this.isRetweet = opts.tweet.reTweet != null;
+if (opts.observable != undefined) {
+    opts.observable.on("onLoadTweet", function (tweet) {
         _this.update();
         opts.findMemberDetail(opts.tweet.memberId);
-    }
-});
+    });
+    opts.observable.on("onLoadMember", function (member) {
+        opts.member = member;
+        _this.update();
+    });
+}
 
 });

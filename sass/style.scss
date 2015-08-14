@@ -1,14 +1,174 @@
-.pg-sign {
-  width: 400px;
-  background-color: #ccc;
 
+// ===================================================================================
+//                                                                            Variable
+//                                                                            ========
+
+$container-width: 960px;
+
+$input-border-color: #ccc;
+
+// ===================================================================================
+//                                                                               Mixin
+//                                                                               =====
+
+@mixin simple-ul {
+  margin: 0;
+  padding-left: 0;
+  list-style-type: none;
+}
+
+
+
+// ===================================================================================
+//                                                                              Common
+//                                                                              ======
+
+body {
+  color: #999;
+}
+
+.sg-animation {
   -webkit-transition: all 0.5s ease;
   -moz-transition: all 0.5s ease;
   -o-transition: all 0.5s ease;
   transition: all 0.5s ease;
 }
 
-.hoge {
-  width: 800px;
-  background: #123;
+.sg-container {
+  width: $container-width;
+  margin: 0 auto;
+  position: relative;
+}
+
+.sg-header {
+  background: rgba(0, 0, 0, 0.8);
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 10;
+
+  & .sg-header-contents {
+    @include simple-ul;
+    display: table;
+    table-layout: fixed;
+    width: 100%;
+    font-size: 1.2em;
+
+    & > li {
+      display: table-cell;
+      vertical-align: center;
+      text-align: center;
+    }
+
+    & h1 {
+      margin: 0;
+      font-size: 1em;
+
+      & a {
+        color: #fff;
+        text-decoration: none;
+      }
+    }
+
+    & .sg-header-post {
+      width: 590px;
+
+      @mixin sg-header-post-inputs {
+        padding-left: 10px;
+        border: none;
+      }
+
+      & input, & textarea {
+        @include sg-header-post-inputs;
+        width: calc(100% - 11px);
+
+        &:focus {
+          outline: none;
+        }
+      }
+
+      & textarea {
+        @include sg-header-post-inputs;
+        border-top: 1px dashed $input-border-color;
+        width: calc(100% - 12px);
+        display: none;
+        height: 0px;
+        opacity: 1;
+      }
+
+      & textarea.sg-header-post-inputting {
+        display: inline-block;
+        margin-bottom: -7px;
+        height: 100px;
+        animation: show-comment-textarea 0.5s;
+      }
+
+      & textarea.sg-header-post-removing {
+        height: 0;
+        opacity: 0;
+        animation: hide-comment-textarea 0.5s;
+      }
+
+      @keyframes show-comment-textarea {
+        0% {height: 0px; opacity: 0;}
+        100% {height: 100px; opacity: 1;}
+      }
+
+      @keyframes hide-comment-textarea {
+        0% {height: 100px; opacity: 1;}
+        100% {height: 0; opacity: 0; display: none;}
+      }
+
+      & div {
+        text-align: right;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.3);
+        display: none;
+        opacity: 0;
+
+        @keyframs show-opacity {
+          0% {opacity: 0;}
+          100% {opacity: 1;}
+        }
+
+        @keyframs hide-opacity {
+          0% {opacity: 1;}
+          100% {opacity: 0;}
+        }
+
+        &.sg-header-post-submit-inputting {
+          display: block;
+          opacity: 1;
+          animation: show-opacity 0.5s;
+        }
+
+        &.sg-header-post-submit-removing {
+          opacity: 0;
+          animation: hide-opacity 0.5s;
+        }
+
+        & p {
+          display: inline-block;
+          margin: 0;
+          color: #fff;
+
+          &.sg-header-post-submit-over {
+            color: red;
+          }
+        }
+
+        & button {
+          margin-left: 10px;
+        }
+      }
+    }
+
+    & .sg-header-menu {
+
+      & a {
+        color: #fff;
+        text-decoration: none;
+      }
+    }
+  }
 }

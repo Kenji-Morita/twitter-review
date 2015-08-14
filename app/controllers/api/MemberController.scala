@@ -1,5 +1,7 @@
 package controllers.api
 
+import play.api.libs.json.{JsError, JsSuccess, JsPath, Reads}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -11,6 +13,8 @@ import controllers.ResponseCode._
 import models.MemberModel
 import utils.JsonUtil._
 
+case class MemberIdList(memberIdList: List[String])
+
 /**
  * @author SAW
  */
@@ -21,6 +25,21 @@ class MemberController extends Controller {
       MemberModel.findById(memberId).flatMap {
         case None => Future.successful(BadRequest(createJson(MemberNotFound)))
         case Some(member) => member.toJson.map(json => Ok(createJson(NoReason, json)))
+      }
+  }
+
+  def detailList = Action.async(parse.json) {
+    implicit request =>
+      implicit val reads: Reads[MemberIdList] = (JsPath \ "memberIdList").read[List[String]].map(memberIdList => MemberIdList(memberIdList))
+      request.body.validate[MemberIdList] match {
+        case JsSuccess(value, path) => {
+          MemberModel.findByIdList(value.memberIdList).map(_.map(_.toJson)).flatMap { list =>
+            Future.traverse(list)(identity)
+          }.map { list =>
+            Ok(createJson(NoReason, list))
+          }
+        }
+        case e: JsError => Future.successful(BadRequest(createJson(ValidationError, JsError.toJson(e))))
       }
   }
 

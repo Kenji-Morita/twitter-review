@@ -35,27 +35,16 @@
     // ===================================================================================
     //                                                                               Event
     //                                                                               =====
-
-    opts.observable.on("onLoadMember", member => {
-      opts.member = member;
-      this.update();
-    });
-
-    // ===================================================================================
-    //                                                                               Logic
-    //                                                                               =====
-
-    request
-      .get("/api/tweet/detail/" + opts.tweetId)
-      .end((error, response) => {
-        if(response.ok) {
-          var result = JSON.parse(response.text);
-          opts.tweet = result.value;
-          this.isRetweet = opts.tweet.reTweet != null;
-          this.update();
-          opts.findMemberDetail(opts.tweet.memberId);
-        }
+    if (opts.observable != undefined) {
+      opts.observable.on("onLoadTweet", tweet => {
+        this.update();
+        opts.findMemberDetail(opts.tweet.memberId);
       });
 
+      opts.observable.on("onLoadMember", member => {
+        opts.member = member;
+        this.update();
+      });
+    }
   </script>
 </tweet>
