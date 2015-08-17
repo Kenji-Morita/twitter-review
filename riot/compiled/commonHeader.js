@@ -12,6 +12,11 @@ this.observable = riot.observable();
 // ===================================================================================
 //                                                                               Event
 //                                                                               =====
+request
+    .get("http://google.com")
+    .end(function (error, response) {
+    console.log(response.text);
+});
 this.doSignOut = function (e) {
     e.preventDefault();
     request

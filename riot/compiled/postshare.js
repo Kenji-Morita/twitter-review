@@ -1,7 +1,7 @@
-riot.tag('postshare', '<form onsubmit="{doPost}" class="{sg-header-post-inputting: isShowComment}"><input type="text" placeholder="share URL" oninput="{doInputURL}"><textarea placeholder="with comment (option)" oninput="{doInputComment}" class="{sg-header-post-inputting: isShowComment}"></textarea><div class="{sg-header-post-submit-inputting: isShowComment}"><p class="{sg-header-post-submit-over: commentLength > 140}">{commentLength}</p><button>Post</button></div></form>', function(opts) {// ===================================================================================
+riot.tag('postshare', '<form onsubmit="{doPost}" class="{sg-header-post-inputting: isShowComment}"><input type="text" placeholder="share URL" oninput="{doInputURL}"><textarea placeholder="with comment (option)" oninput="{doInputComment}" class="{sg-header-post-inputting: isShowComment}"></textarea><div class="{sg-header-post-submit-inputting: isShowComment}"><p class="{sg-header-post-submit-over: commentLength > 140}">{commentLength}</p><button>Post</button></div></form>', function(opts) {var _this = this;
+// ===================================================================================
 //                                                                          Attributes
 //                                                                          ==========
-var _this = this;
 this.commentLength = 0;
 this.isShowComment = false;
 // ===================================================================================

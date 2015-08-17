@@ -39,6 +39,12 @@
         //                                                                               Event
         //                                                                               =====
 
+        request
+          .get("http://google.com")
+          .end((error, response) => {
+            console.log(response.text);
+          });
+
         this.doSignOut = e => {
           e.preventDefault();
           request
