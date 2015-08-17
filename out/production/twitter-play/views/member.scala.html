@@ -6,10 +6,11 @@
     <meta charset="UTF-8">
     <title>SAW Twitter | Member</title>
     <link href="/assets/stylesheets/normalize.css" rel="stylesheet" />
+    <link href="/assets/stylesheets/style.css" rel="stylesheet" />
     <script src="/assets/javascripts/lodash.min.js"></script>
     <script src="/assets/javascripts/superagent.js"></script>
     <script src="/assets/javascripts/riot.min.js"></script>
-    <script src="/assets/javascripts/tag.min.js"></script>
+    <script src="/assets/javascripts/tag.js"></script>
 </head>
 <body>
 <commonheader></commonheader>
@@ -21,14 +22,14 @@
 <commonfooter></commonfooter>
 
 <script>
-    var loginInfo = {isLogin: @{loginMember.nonEmpty}, member: @Html(loginMember.get.toJsonStr)};
-    var memberJson = @Html(member.toJsonStr)
-
-    riot.mount("commonheader", {loginInfo: loginInfo});
-    riot.mount("profileaside", {member: memberJson});
-    riot.mount("follow", {loginInfo: loginInfo, memberId: memberJson.memberId});
-    riot.mount("timeline", {target: "member/" + memberJson.memberId});
+    var common = riot.mount("commonheader", {isLogin: @{loginMember.nonEmpty}})[0];
+    common.timeline.targetId = "@{member.memberId}";
+    riot.mount("profileaside", common);
+    riot.mount("follow", common);
+    riot.mount("timeline", common);
     riot.mount("commonfooter");
+    common.findLoginMemberDetail();
+    common.findMemberDetail(@{member.memberId});
 </script>
 </body>
 </html>

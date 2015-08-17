@@ -18,31 +18,16 @@ import utils.ElasticsearchUtil
 /**
  * @author SAW
  */
-case class TweetObject(tweetId: String, memberId: String, text: Option[String], timestamp: Long, replyToId: Option[String])
+case class TweetJson(tweetId: String, memberId: String, shareContentsSurfaceUrl: String, comment: String, postedAt: String, timestamp: Long, replyToTweetId: Option[String])
 
 /**
  * @author SAW
  */
-case class Tweet(tweetId: String, memberId: String, text: Option[String], timestamp: Long, replyToId: Option[String], retweetFromId: Option[String], deleted: Boolean) {
+case class Tweet(tweetId: String, memberId: String, shareContentsSurfaceUrl: String, shareContentsId: String, comment: String, timestamp: Long, replyToTweetId: Option[String], deleted: Boolean) {
 
   // ===================================================================================
   //                                                                          Attributes
   //                                                                          ==========
-
-  val reTweet: Future[Option[Tweet]] = retweetFromId match {
-    case None => Future.successful(None)
-    case Some(id) => TweetModel.findById(id)
-  }
-
-  val isReTweet: Boolean = !retweetFromId.isEmpty
-
-  val isDeleted: Boolean = deleted match {
-    case true => true
-    case false => isReTweet match {
-      case true => false // TODO reTweet.get.isDeleted
-      case false => false
-    }
-  }
 
   val postedAt: String = {
     val postedDateTime: LocalDateTime = LocalDateTime.ofEpochSecond(timestamp / 1000, 0, ZoneOffset.ofHours(9))
@@ -61,30 +46,8 @@ case class Tweet(tweetId: String, memberId: String, text: Option[String], timest
   //                                                                             Convert
   //                                                                             =======
 
-  def toObject: TweetObject = TweetObject(tweetId, memberId, text, timestamp, replyToId)
+  def toJson: JsValue = Json.toJson(TweetJson(tweetId, memberId, shareContentsSurfaceUrl, comment, postedAt, timestamp, replyToTweetId))(Json.writes[TweetJson])
 
-  def toJson: JsValue = reTweet.map { tweetOpt =>
-    tweetOpt match {
-      case None => Json.toJson(Map(
-        "tweetId" -> Json.toJson(tweetId),
-        "memberId" -> Json.toJson(memberId),
-        "text" -> text.map(t => Json.toJson(t)).getOrElse(JsNull),
-        "timestamp" -> Json.toJson(timestamp),
-        "replyToId" -> replyToId.map(r => Json.toJson(r)).getOrElse(JsNull),
-        "reTweet" -> JsNull
-      ))
-      case Some(tweet) => Json.toJson(Map(
-        "tweetId" -> Json.toJson(tweetId),
-        "memberId" -> Json.toJson(memberId),
-        "text" -> text.map(t => Json.toJson(t)).getOrElse(JsNull),
-        "timestamp" -> Json.toJson(timestamp),
-        "replyToId" -> replyToId.map(r => Json.toJson(r)).getOrElse(JsNull),
-        "reTweet" -> Json.toJson(tweet.toObject)(Json.writes[TweetObject])
-      ))
-    }
-  }.await // TODO SAW
-
-  def toJsonStr = toJson.toString
 }
 
 /**
@@ -100,30 +63,36 @@ object TweetModel {
     client.execute(search in "twitter/tweet" fields "_timestamp" fields "_source" query {
       matches ("_id", targetTweetId)
     }).map { result =>
-      result.getHits.getHits.headOption.map(mapping(_))
+      result.getHits.getHits.headOption.map(mapping)
     }
   }
+
+  // TODO
+  def findByShareContentsId(shareContentsId: String): Future[Option[Tweet]] = ???
 
   // ===================================================================================
   //                                                                                  Do
   //                                                                                  ==
 
-  def tweet(authorMemberId: String, text: String): Future[String] = ElasticsearchUtil.process { client =>
+  def tweet(authorMemberId: String, surfaceUrl: String, comment: String, shareContents: ShareContents): Future[String] = ElasticsearchUtil.process { client =>
     client.execute(index into "twitter/tweet" fields (
       "memberId" -> authorMemberId,
-      "text" -> text,
+      "comment" -> comment,
+      "shareContentsSurfaceUrl" -> surfaceUrl,
+      "shareContentsId" -> shareContents.shareContentsId,
       "deleted" -> false
     )).map(_.getId)
   }
 
-  def reply(authorMemberId: String, text: String, tweet: Tweet): Option[String] = ElasticsearchUtil.process { client =>
-    // TODO SAW implement
-    None
-  }
-
-  def reTweet(authorMemberId: String, text: String, tweet: Tweet): Option[String] = ElasticsearchUtil.process { client =>
-    // TODO SAW implement
-    None
+  def reply(authorMemberId: String, replyToTweet: Tweet, surfaceUrl: String, comment: String, shareContents: ShareContents): Future[String] = ElasticsearchUtil.process { client =>
+    client.execute(index into "twitter/tweet" fields (
+      "memberId" -> authorMemberId,
+      "replyToTweetId" -> replyToTweet.tweetId,
+      "comment" -> comment,
+      "shareContentsSurfaceUrl" -> surfaceUrl,
+      "shareContentsId" -> shareContents.shareContentsId,
+      "deleted" -> false
+    )).map(_.getId)
   }
 
   def delete(tweet: Tweet): Unit = ElasticsearchUtil.process { client =>
@@ -137,18 +106,16 @@ object TweetModel {
   def mapping(hit: SearchHit): Tweet = {
     val source: util.Map[String, AnyRef] = hit.getSource
     val memberId: String = source.get("memberId").asInstanceOf[String]
-    val text: String = source.get("text").asInstanceOf[String]
+    val shareContentsUrl: String = source.get("shareContentsUrl").asInstanceOf[String]
+    val shareContentsId: String = source.get("shareContentsId").asInstanceOf[String]
+    val comment: String = source.get("comment").asInstanceOf[String]
     val timestamp = hit.field("_timestamp").getValue.toString.toLong
-    val replyToId = source.get("replyToId").asInstanceOf[String] match {
-      case null => None
-      case r => Some(r)
-    }
-    val reTweetFromId = source.get("reTweetFromId").asInstanceOf[String] match {
+    val replyToTweetId = source.get("replyToTweetId").asInstanceOf[String] match {
       case null => None
       case r => Some(r)
     }
     val deleted = source.get("deleted").asInstanceOf[Boolean]
 
-    Tweet(hit.getId, memberId, Some(text), timestamp, replyToId, reTweetFromId, deleted)
+    Tweet(hit.getId, memberId, shareContentsUrl, shareContentsId, comment, timestamp, replyToTweetId, deleted)
   }
 }

@@ -7,8 +7,10 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala)
 scalaVersion := "2.11.7"
 
 libraryDependencies ++= Seq(
+  ws,
   "com.sksamuel.elastic4s" %% "elastic4s" % "1.5.6",
-  "net.debasishg" %% "redisclient" % "3.0"
+  "com.github.scala-incubator.io" %% "scala-io-core" % "0.4.3",
+  "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.3"
 )
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"

@@ -22,13 +22,19 @@ class FrontController extends Controller {
        }
    }
 
+   // TODO
+   def confirmHash(memberId: String, confirmHash: String) = Action {
+     implicit request =>
+       Ok
+   }
+
   def tweet(tweetId: String) = Action.async {
     implicit request =>
       getSessionMemberOpt(request).flatMap { loginMemberOpt =>
         TweetModel.findById(tweetId).map { tweetOpt =>
           tweetOpt match {
             case None => NotFound(views.html.tweet404(loginMemberOpt))
-            case Some(tweet) if tweet.isDeleted => NotFound(views.html.tweet404(loginMemberOpt))
+            case Some(tweet) if tweet.deleted => NotFound(views.html.tweet404(loginMemberOpt))
             case Some(tweet) => Ok(views.html.tweet(loginMemberOpt)(tweet))
           }
         }

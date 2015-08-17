@@ -1,3 +1,4 @@
+import com.typesafe.config.{ConfigFactory, Config}
 import play.api.{Application, GlobalSettings, Play}
 import utils.ElasticsearchUtil
 

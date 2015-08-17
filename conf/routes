@@ -4,52 +4,33 @@
 
 # Front
 GET         /                                           controllers.FrontController.index
+GET         /confirm/:memberId:confirmHash              controllers.api.AuthController.confirm(memberId: String, confirmHash: String)
 GET         /tweet/:tweetId                             controllers.FrontController.tweet(tweetId: String)
-GET         /member/:memberId                           controllers.FrontController.member(memberId: String)
-GET         /following/:memberId                        controllers.FrontController.following(memberId: String)
-GET         /followers/:memberId                        controllers.FrontController.followers(memberId: String)
-GET         /setting                                    controllers.FrontController.setting
+### GET         /profile                                    controllers.FrontController.profile
 
 # Auth
 POST        /api/auth/signup                            controllers.api.AuthController.signUp
-GET         /api/auth/confirm/:memberId/:hash           controllers.api.AuthController.confirm(memberId: String, hash: String)
+GET         /api/auth/confirm/:memberId/:confirmHash    controllers.api.AuthController.confirm(memberId: String, confirmHash: String)
 POST        /api/auth/signin                            controllers.api.AuthController.signIn
 POST        /api/auth/signout                           controllers.api.AuthController.signOut
-GET         /api/auth/member/detail                     controllers.api.AuthController.memberDetail
+### GET         /api/auth/profile                          controllers.api.AuthController.profile
 ### DELETE      /api/auth/withdrawal                       controllers.api.AuthController.withdrawal
-
-# Member
-GET         /api/member/detail/:memberId                controllers.api.MemberController.detail(memberId: String)
-POST        /api/member/details                         controllers.api.MemberController.detailList
-### GET         /api/member/following                       controllers.api.MemberController.following
-### GET         /api/member/followers                       controllers.api.MemberController.followers
-POST        /api/member/follow/:memberId                controllers.api.MemberController.follow(memberId: String)
-DELETE      /api/member/unfollow/:memberId              controllers.api.MemberController.unFollow(memberId: String)
 
 # Timeline
 GET         /api/timeline/home                          controllers.api.TimelineController.home
-GET         /api/timeline/member/:memberId              controllers.api.TimelineController.member(memberId: String)
 ### GET         /api/timeline/search                        controllers.api.TimelineController.search
 
 # Tweet
 GET         /api/tweet/detail/:tweetId                  controllers.api.TweetController.detail(tweetId: String)
 POST        /api/tweet/tweet                            controllers.api.TweetController.tweet
 POST        /api/tweet/reply/:tweetId                   controllers.api.TweetController.reply(tweetId: String)
-### POST        /api/tweet/favorite/:tweetId                controllers.api.TweetController.favorite(tweetId: String)
-POST        /api/tweet/retweet/:tweetId                 controllers.api.TweetController.reTweet(tweetId: String)
 DELETE      /api/tweet/delete/:tweetId                  controllers.api.TweetController.delete(tweetId: String)
 
-# Setting
-### PUT         /api/setting/icon                           controllers.api.SettingController.icon
-### PUT         /api/setting/name                           controllers.api.SettingController.name
-### PUT         /api/setting/biography                      controllers.api.SettingController.biography
-
-# Notify
-### GET         /api/notify/news                            controllers.api.NotifyController.news
-### GET         /api/notify/read                            controllers.api.NotifyController.read
+# Value
+PUT         /api/value/good/:tweetId                    controllers.api.ValueController.good(tweetId: String)
+PUT         /api/value/bad/:tweetId                     controllers.api.ValueController.bad(tweetId: String)
 
 # Resource
-GET         /assets/icon/:iconId                        controllers.ResourceController.icon(iconId: String)
 GET         /assets/*file                               controllers.Assets.versioned(path="/public", file: Asset)
 
 # Sandbox
@@ -57,3 +38,4 @@ GET         /api/sandbox/get                            controllers.api.SandboxC
 GET         /api/sandbox/auth                           controllers.api.SandboxController.auth
 POST        /api/sandbox/post                           controllers.api.SandboxController.post
 DELETE      /api/sandbox/delete                         controllers.api.SandboxController.delete
+GET         /sandbox                                    controllers.api.SandboxController.front

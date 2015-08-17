@@ -39,6 +39,8 @@ object ResponseCode {
 
   val SignInFailed                          = (40000, "Sign in failed. please check screenName or mail and password")
 
+  val NotConfirmed                          = (40000, "Sign in failed. please confirm mail when you registered")
+
   val TweetFailed                           = (40000, "Tweet failed. please try again")
 
   val TweetIsNotYours                       = (40000, "Target tweet is not yours")

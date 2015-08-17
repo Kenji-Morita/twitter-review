@@ -1,5 +1,7 @@
 package models
 
+import java.time.LocalDateTime
+
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -11,7 +13,7 @@ import utils.PasswordUtil.crypt
 /**
  * @author SAW
  */
-case class ConfirmHash(hashId: String, memberId: String, hashValue: String) {
+case class MemberConfirmHash(hashId: String, memberId: String, hashValue: String) {
 
   // ===================================================================================
   //                                                                               Match
@@ -24,25 +26,26 @@ case class ConfirmHash(hashId: String, memberId: String, hashValue: String) {
   //                                                                             =======
 
   def complete = ElasticsearchUtil.process { client =>
-    client.execute(update id hashId in "twitter/hash" doc "used" -> true)
+    client.execute(update id hashId in "twitter/memberConfirmHash" doc "used" -> true)
   }
 }
 
 /**
  * @author SAW
  */
-object ConfirmHashModel {
+object MemberConfirmHashModel {
 
   // ===================================================================================
   //                                                                              Create
   //                                                                              ======
 
   def create(member: Member): String = ElasticsearchUtil.process { client =>
-    val input = member.screenName + member.password + member.memberId
+    val input = LocalDateTime.now.toString + member.password + member.memberId
     val hash = crypt(input)
-    client.execute(index into "twitter/hash" fields (
+    client.execute(index into "twitter/memberConfirmHash" fields (
       "memberId" -> member.memberId,
-      "hash" -> hash
+      "confirmHash" -> hash,
+      "used" -> false
     ))
     hash
   }
@@ -51,8 +54,8 @@ object ConfirmHashModel {
   //                                                                                Find
   //                                                                                ====
   
-  def findHashValueByMemberId(memberId: String): Future[Option[ConfirmHash]] = ElasticsearchUtil.process { client =>
-    client.execute(search in "twitter/hash" query {
+  def findHashValueByMemberId(memberId: String): Future[Option[MemberConfirmHash]] = ElasticsearchUtil.process { client =>
+    client.execute(search in "twitter/memberConfirmHash" query {
       filteredQuery filter {
         andFilter(
           termFilter("memberId", memberId),
@@ -62,7 +65,7 @@ object ConfirmHashModel {
     }).map { result =>
       result.getHits.getHits.headOption.map { hit =>
         val source = hit.getSource
-        ConfirmHash(hit.id, source.get("memberId").asInstanceOf[String], source.get("hash").asInstanceOf[String])
+        MemberConfirmHash(hit.id, source.get("memberId").asInstanceOf[String], source.get("confirmHash").asInstanceOf[String])
       }
     }
   }

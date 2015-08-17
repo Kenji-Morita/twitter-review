@@ -17,9 +17,9 @@ case class Mail(text: String) {
  */
 object MailUtil {
 
-  def createSignUpMessage(screenName: String, url: String): Mail = create(
+  def createSignUpMessage(url: String): Mail = create(
     s"""
-      |Hi, $screenName.
+      |Hi
       |
       |Just now, your account created.
       |

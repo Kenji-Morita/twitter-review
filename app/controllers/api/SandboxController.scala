@@ -1,30 +1,23 @@
 package controllers.api
 
-
-import actions.AuthAction
-import controllers.ResponseCode
-import play.api.libs.json.{JsPath, Writes}
+import models.{ShareContentsModel, ShareContents}
 import play.api.mvc.{Action, Controller}
-import play.api.libs.functional.syntax._
-import ResponseCode._
-import utils.JsonUtil._
+import actions.AuthAction
 
-case class Hoge(id: Int, name: String, list: List[String])
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * @author SAW
  */
 class SandboxController extends Controller {
 
-  def get = Action {
+  def get = Action.async {
     implicit request => {
-      val hoge = Hoge(1, "hogehoge", List("a", "b", "c"))
-      implicit val writes: Writes[Hoge] = (
-        (JsPath \ "id").write[Int] and
-        (JsPath \ "name").write[String] and
-        (JsPath \ "list").write[List[String]]
-      )(unlift(Hoge.unapply))
-      Ok(createJson(NoReason, List(hoge, hoge)))
+      val sc: Future[ShareContents] = ShareContentsModel.createOrFind("https://www.zuknow.net/")
+      sc.map { s =>
+        Ok(s.toJson)
+      }
     }
   }
 
@@ -39,5 +32,9 @@ class SandboxController extends Controller {
 
   def delete = Action {
     Ok
+  }
+
+  def front = Action {
+    Ok(views.html.sandbox.render)
   }
 }
