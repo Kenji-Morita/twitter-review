@@ -151,7 +151,7 @@ es PUT _mapping/tweetValue '
         "index": "not_analyzed",
         "type": "string"
       },
-      "valueToCommentId": {
+      "valueToTweetId": {
         "index": "not_analyzed",
         "type": "string"
       },
@@ -350,7 +350,7 @@ es POST tweetValue '
 {
   "valueFromMemberId": "1",
   "valueToMemberId": "2",
-  "valueToCommentId": "2",
+  "valueToTweetId": "2",
   "valueScore": 1
 }'
 
@@ -358,7 +358,7 @@ es POST tweetValue '
 {
   "valueFromMemberId": "2",
   "valueToMemberId": "4",
-  "valueToCommentId": "5",
+  "valueToTweetId": "5",
   "valueScore": -1
 }'
 
@@ -366,6 +366,6 @@ es POST tweetValue '
 {
   "valueFromMemberId": "3",
   "valueToMemberId": "4",
-  "valueToCommentId": "5",
+  "valueToTweetId": "5",
   "valueScore": -1
 }'

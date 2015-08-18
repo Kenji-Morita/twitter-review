@@ -18,7 +18,7 @@ import utils.ElasticsearchUtil
 /**
  * @author SAW
  */
-case class TweetJson(tweetId: String, memberId: String, shareContentsSurfaceUrl: String, comment: String, postedAt: String, timestamp: Long, replyToTweetId: Option[String])
+case class TweetJson(tweetId: String, shareContentsSurfaceUrl: String, comment: String, postedAt: String, timestamp: Long, replyToTweetId: Option[String])
 
 /**
  * @author SAW
@@ -46,7 +46,7 @@ case class Tweet(tweetId: String, memberId: String, shareContentsSurfaceUrl: Str
   //                                                                             Convert
   //                                                                             =======
 
-  def toJson: JsValue = Json.toJson(TweetJson(tweetId, memberId, shareContentsSurfaceUrl, comment, postedAt, timestamp, replyToTweetId))(Json.writes[TweetJson])
+  def toJson: JsValue = Json.toJson(TweetJson(tweetId, shareContentsSurfaceUrl, comment, postedAt, timestamp, replyToTweetId))(Json.writes[TweetJson])
 
 }
 

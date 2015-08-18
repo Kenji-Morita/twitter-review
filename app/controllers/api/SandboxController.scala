@@ -12,12 +12,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
  */
 class SandboxController extends Controller {
 
-  def get = Action.async {
+  def get = Action {
     implicit request => {
-      val sc: Future[ShareContents] = ShareContentsModel.createOrFind("https://www.zuknow.net/")
-      sc.map { s =>
-        Ok(s.toJson)
-      }
+      Ok
     }
   }
 

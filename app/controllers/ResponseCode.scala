@@ -51,6 +51,8 @@ object ResponseCode {
 
   val UnFollowed                            = (40000, "You Don't follow target member")
 
+  val AlreadyValued                         = (40000, "You already valued target tweet")
+
   // ===================================================================================
   //                                                                        UnAuthorized
   //                                                                        ============
