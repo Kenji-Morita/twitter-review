@@ -8,9 +8,7 @@ scalaVersion := "2.11.7"
 
 libraryDependencies ++= Seq(
   ws,
-  "com.sksamuel.elastic4s" %% "elastic4s" % "1.5.6",
-  "com.github.scala-incubator.io" %% "scala-io-core" % "0.4.3",
-  "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.3"
+  "com.sksamuel.elastic4s" %% "elastic4s" % "1.5.6"
 )
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"

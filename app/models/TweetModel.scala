@@ -106,7 +106,7 @@ object TweetModel {
   def mapping(hit: SearchHit): Tweet = {
     val source: util.Map[String, AnyRef] = hit.getSource
     val memberId: String = source.get("memberId").asInstanceOf[String]
-    val shareContentsUrl: String = source.get("shareContentsUrl").asInstanceOf[String]
+    val shareContentsUrl: String = source.get("shareContentsSurfaceUrl").asInstanceOf[String]
     val shareContentsId: String = source.get("shareContentsId").asInstanceOf[String]
     val comment: String = source.get("comment").asInstanceOf[String]
     val timestamp = hit.field("_timestamp").getValue.toString.toLong

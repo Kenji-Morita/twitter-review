@@ -8,11 +8,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import utils.ElasticsearchUtil
 
-case class TimelineObject(tweet: Tweet, shareContents: ShareContents) {
+case class TimelineObject(tweet: Tweet, shareContents: ShareContents, valueCount: ValueCount) {
 
   def toJson: JsValue = Json.toJson(Map(
     "shareContents" -> shareContents.toJson,
-    "tweet" -> tweet.toJson
+    "tweet" -> tweet.toJson,
+    "value" -> valueCount.toJson
   ))
 }
 
@@ -52,8 +53,10 @@ object TimelineModel {
       by field "_timestamp" order SortOrder.DESC
     )).map(_.getHits.getHits.toList.map { hit =>
       TweetModel.findById(hit.getId).flatMap { tweet =>
-        ShareContentsModel.findById(hit.getSource.get("shareContentsId").asInstanceOf[String]).map { shareContents =>
-          TimelineObject(tweet.get, shareContents)
+        ValueModel.countValueByTweet(tweet.get).flatMap { valueCount =>
+          ShareContentsModel.findById(hit.getSource.get("shareContentsId").asInstanceOf[String]).map { shareContents =>
+            TimelineObject(tweet.get, shareContents, valueCount)
+          }
         }
       }
     }).flatMap { futureList =>

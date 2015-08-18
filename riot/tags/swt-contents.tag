@@ -1,49 +1,52 @@
-<profileaside>
-
-  <aside class="pg-profile">
-        <img src="/assets/icon/1">
-        <h2>{member.displayName}</h2>
-        <p>{member.biography}</p>
-        <dl>
-            <dt>Followings</dt>
-            <dd><a href="/following/{member.memberId}">{member.following.count}</a></dd>
-            <dt>Followers</dt>
-            <dd><a href="/followers/{member.memberId}">{member.followers.count}</a></dd>
-        </dl>
-    </aside>
+<swt-contents>
+  <div class="sg-contents {sg-contents-separate: isDetail}">
+    <swt-tweet if={!isDetail && opts.isLogin}></swt-tweet>
+    <swt-timeline if={!isDetail} opts={opts}></swt-timeline>
+    <swt-detail if={isDetail} opts={opts}></swt-detail>
+    <swt-iframe if={isDetail}></swt-iframe>
+    <swt-modal if={isShowModal} opts={opts}></swt-modal>
+  </div>
 
   <script>
     // ===================================================================================
     //                                                                             Declare
     //                                                                             =======
 
+    declare var riot: any;
     declare var opts: any;
-    interface Window {
-      superagent: any;
-    }
 
     // ===================================================================================
     //                                                                          Attributes
     //                                                                          ==========
 
-    var request = window.superagent;
-    this.member = (opts.timeline.targetId == null) ? opts.loginMember : opts.member;
+    this.isDetail = false;
+    this.isShowModal = false;
 
     // ===================================================================================
     //                                                                               Event
     //                                                                               =====
 
-    if (opts.observable != undefined) {
-      opts.observable.on("onLoadLoginMember", loginMember => {
-        this.member = loginMember;
-        this.update();
-      });
+    opts.obs.on("showDetail", () => {
+      this.isDetail = true;
+      this.update();
+    });
 
-      opts.observable.on("onLoadMember", member => {
-        this.member = member;
+    opts.obs.on("hideDetail", () => {
+      this.isDetail = false;
+      this.update();
+    });
+
+    opts.obs.on("showModal", () => {
+      this.isShowModal = true;
+      this.update();
+    });
+
+    opts.obs.on("hideModal", () => {
+      setTimeout(() => {
+        this.isShowModal = false;
         this.update();
-      });
-    }
+      }, 300);
+    });
+
   </script>
-
-</profileaside>
+</swt-contents>

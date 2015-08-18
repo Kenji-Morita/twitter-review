@@ -3,172 +3,437 @@
 //                                                                            Variable
 //                                                                            ========
 
-$container-width: 960px;
+$font-size-small    : 10px;
+$font-size-middle   : 14px;
+$font-size-large    : 18px;
 
-$input-border-color: #ccc;
+$color-main         : #999;
+$color-sub          : #eee;
+$color-accent       : #900;
+$color-bg           : #efefef;
+$color-white        : #fff;
+$color-text         : #999;
+$color-text-white   : #efefef;
+$color-link         : #999;
+$color-link-hover   : #ccc;
+$color-border       : #ccc;
+$color-modal-bg     : rgba(0, 0, 0, 0.7);
+$color-good         : #ccc;
+$color-good-hover   : #ccc;
+$color-bad          : #ccc;
+$color-bad-hover    : #ccc;
+
+$width-container-micro  : 480px;
+$width-container-small  : 590px;
+$width-container-middle : 720px;
+$width-container-large  : 960px;
+$width-half-percent     : 50%;
+
+$margin-micro       : 5px;
+$margin-small       : 10px;
+$margin-middle      : 50px;
+$margin-large       : 100px;
+
+$round-param        : 5px;
+
+$icon-size          : 32px;
+
+$border-common      : 1px solid $color-border;
 
 // ===================================================================================
 //                                                                               Mixin
 //                                                                               =====
 
-@mixin simple-ul {
-  margin: 0;
-  padding-left: 0;
-  list-style-type: none;
+@mixin clear-fix {
+  content: "";
+  display: block;
+  clear: both;
 }
 
-
+@mixin contents-base {
+  background: $color-white;
+  border-radius: $round-param;
+  width: $width-container-small - $margin-small * 2;
+  padding: $margin-small;
+  margin: 0 auto $margin-small;
+}
 
 // ===================================================================================
 //                                                                              Common
 //                                                                              ======
 
-body {
-  color: #999;
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: $color-main;
+  color: $color-text;
 }
 
-.sg-animation {
-  -webkit-transition: all 0.5s ease;
-  -moz-transition: all 0.5s ease;
-  -o-transition: all 0.5s ease;
-  transition: all 0.5s ease;
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+p {
+  margin: 0;
 }
 
 .sg-container {
-  width: $container-width;
+  width: $width-container-large;
   margin: 0 auto;
-  position: relative;
 }
 
+// ===================================================================================
+//                                                                              Header
+//                                                                              ======
+
 .sg-header {
-  background: rgba(0, 0, 0, 0.8);
+  background: $color-main;
+  width: 100%;
   position: fixed;
   top: 0;
-  width: 100%;
+  padding: $margin-micro;
   z-index: 10;
 
-  & .sg-header-contents {
-    @include simple-ul;
+  & ul:after {
+    @include clear-fix;
+  }
+
+  & .sg-header-logo {
+    float: left;
+
+    & h1 {
+      margin: 0;
+      font-size: $font-size-large;
+      color: $color-text-white;
+    }
+  }
+
+  & .sg-header-tweet {
+    position: absolute;
+
+    // for fix
+    left: calc(50% - 32px);
+    top: 3px;
+
+    & a {
+      display: block;
+      width: $icon-size;
+      height: $icon-size;
+      background: $color-white;
+      border-radius: $icon-size;
+      color: $color-accent;
+      transition: all 0.2s ease;
+
+      & i {
+        position: relative;
+        top: 4px;
+        left: 9px;
+      }
+
+      &:hover {
+        transform: rotateZ(360deg);
+      }
+    }
+  }
+
+  & .sg-header-signs {
+    float: right;
+
+    & ul {
+      display: table;
+      table-layout: fixed;
+      border-collapse: separate;
+      border-spacing: $margin-micro 0;
+
+      & > li {
+        display: table-cell;
+        vertical-align: center;
+        text-align: center;
+      }
+    }
+  }
+}
+
+
+// ===================================================================================
+//                                                                            Contents
+//                                                                            ========
+
+.sg-contents-modal-contents-msg {
+
+  padding: 0 $margin-small 0 $margin-micro;
+
+  & label, & input {
+    display: block;
+    width: 100%;
+    margin-bottom: $margin-small;
+  }
+}
+
+.sg-contents {
+  width: 100%;
+  background: $color-bg;
+  padding: $margin-middle 0;
+  min-height: 80%;
+
+  &.sg-contents-separate {
+    padding: 39px 0 0;
+    margin: 0;
     display: table;
     table-layout: fixed;
-    width: 100%;
-    font-size: 1.2em;
 
-    & > li {
+    & > * {
+      display: table-cell;
+      width: 50%;
+      height: 100%;
+    }
+  }
+
+  &:after {
+    @include clear-fix;
+  }
+
+  & .sg-contents-tweet {
+    @include contents-base;
+
+    & input, & textarea {
+      padding: $margin-micro;
+      border: $border-common;
+      width: calc(100% - 12px);
+      margin-bottom: $margin-small;
+    }
+
+    & textarea {
+      height: 0;
+      opacity: 0;
+      padding: 0;
+      transition: all 0.5s ease;
+
+      &.sg-contents-tweet-comment-show {
+        height: 100px;
+        opacity: 1;
+        padding: $margin-micro;
+      }
+    }
+
+    & .sg-contents-tweet-submit {
+      text-align: right;
+
+      & button {
+        margin-left: $margin-small;
+      }
+
+      & .sg-contents-tweet-submit-invalid {
+        color: $color-accent;
+      }
+    }
+  }
+
+  & .sg-contents-timeline {
+    @include contents-base;
+    transition: all 0.5s ease;
+
+    & li {
+      margin-bottom: $margin-middle;
+      padding: 0 $margin-middle;
+    }
+
+    & dl {
+      width: 100%;
+      display: table;
+      table-layout: fixed;
+      margin-bottom: $margin-small * -1;
+    }
+
+    & dt {
       display: table-cell;
       vertical-align: center;
       text-align: center;
+      width: 120px;
+    }
+
+    & dd {
+      display: table-cell;
+      vertical-align: center;
+      position: relative;
     }
 
     & h1 {
       margin: 0;
-      font-size: 1em;
+      font-size: $font-size-large;
+      position: absolute;
+      left: $margin-small;
+      top: 6px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
 
       & a {
-        color: #fff;
+        color: $color-link;
         text-decoration: none;
+
+        &:hover {
+          text-decoration: underline;
+        }
       }
     }
 
-    & .sg-header-post {
-      width: 590px;
+    & .sg-contents-timeline-comment {
 
-      @mixin sg-header-post-inputs {
-        padding-left: 10px;
-        border: none;
+      & dt {
+        width: $icon-size + $margin-small * 2;
+        position: relative;
+        top: $margin-small;
       }
 
-      & input, & textarea {
-        @include sg-header-post-inputs;
-        width: calc(100% - 11px);
-
-        &:focus {
-          outline: none;
-        }
-      }
-
-      & textarea {
-        @include sg-header-post-inputs;
-        border-top: 1px dashed $input-border-color;
-        width: calc(100% - 12px);
-        display: none;
-        height: 0px;
-        opacity: 1;
-      }
-
-      & textarea.sg-header-post-inputting {
-        display: inline-block;
-        margin-bottom: -7px;
-        height: 100px;
-        animation: show-comment-textarea 0.5s;
-      }
-
-      & textarea.sg-header-post-removing {
-        height: 0;
-        opacity: 0;
-        animation: hide-comment-textarea 0.5s;
-      }
-
-      @keyframes show-comment-textarea {
-        0% {height: 0px; opacity: 0;}
-        100% {height: 100px; opacity: 1;}
-      }
-
-      @keyframes hide-comment-textarea {
-        0% {height: 100px; opacity: 1;}
-        100% {height: 0; opacity: 0; display: none;}
-      }
-
-      & div {
+      & time {
+        font-size: $font-size-small;
+        display: block;
         text-align: right;
-        padding: 10px;
-        background: rgba(255, 255, 255, 0.3);
-        display: none;
-        opacity: 0;
+        margin: $margin-small 0;
+      }
+    }
 
-        @keyframs show-opacity {
-          0% {opacity: 0;}
-          100% {opacity: 1;}
-        }
+    & .sg-contents-timeline-btn {
+      display: table;
+      table-layout: fixed;
+      width: 100%;
+      text-align: center;
+      margin-top: $margin-small;
 
-        @keyframs hide-opacity {
-          0% {opacity: 1;}
-          100% {opacity: 0;}
-        }
+      & li {
+        display: table-cell;
+      }
 
-        &.sg-header-post-submit-inputting {
-          display: block;
-          opacity: 1;
-          animation: show-opacity 0.5s;
-        }
+      & a {
+        display: block;
+        width: 80px;
+        position: relative;
+        padding: $margin-small;
+        border-radius: $round-param;
+        color: $color-white;
+        text-decoration: none;
+        margin: 0 auto;
 
-        &.sg-header-post-submit-removing {
+        & span {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 80px;
+          padding: $margin-small;
+          border-radius: $round-param;
           opacity: 0;
-          animation: hide-opacity 0.5s;
+          transition: opacity 0.2s ease;
         }
 
-        & p {
-          display: inline-block;
-          margin: 0;
-          color: #fff;
+        &.sg-contents-timeline-btn-good {
+          background-color: $color-good;
 
-          &.sg-header-post-submit-over {
-            color: red;
+          & span {
+            background-color: $color-good-hover;
           }
         }
 
-        & button {
-          margin-left: 10px;
+        &.sg-contents-timeline-btn-bad {
+          background-color: $color-bad;
+
+          & span {
+            background-color: $color-bad-hover;
+          }
+        }
+
+        &:hover span {
+          opacity: 1;
         }
       }
     }
+  }
 
-    & .sg-header-menu {
+  & .sg-contents-detail {
+    @include contents-base;
+    width: calc(100% - 20px);
+    margin: 0;
+    border-radius: 0;
+  }
 
-      & a {
-        color: #fff;
-        text-decoration: none;
+  & .sg-contents-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  & .sg-contents-modal {
+    & > div {
+      position: absolute;
+      opacity: 0;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: $color-modal-bg;
+      z-index: 9;
+      transition: opacity 0.5s ease;
+
+      &.sg-contents-modal-bg {
+        opacity: 1;
+      }
+    }
+
+    & .sg-contents-modal-contents {
+      @include contents-base;
+      opacity: 1;
+      margin: 0;
+
+      // for fix
+      max-height: 400px;
+      top: $margin-large;
+      left: calc(50% - 295px);
+
+      & .sg-contents-modal-contents-header {
+        margin-bottom: $margin-small;
+
+        & h1 {
+          margin: 0;
+          font-size: $font-size-large;
+          text-align: center;
+        }
+      }
+
+      & .sg-contents-modal-contents-msg {
+        max-height: 300px;
+        overflow: scroll;
+      }
+
+      & .sg-contents-modal-contents-footer {
+        & ul {
+          display: table;
+          table-layout: fixed;
+          width: 100%;
+          position: absolute;
+          bottom: $margin-small;
+        }
+
+        & li {
+          display: table-cell;
+          vertical-align: center;
+          text-align: center;
+        }
       }
     }
   }
+}
+
+// ===================================================================================
+//                                                                              Footer
+//                                                                              ======
+
+.sg-footer {
+  padding: $margin-micro;
+  text-align: center;
+  color: $color-text-white;
+  z-index: 10;
 }

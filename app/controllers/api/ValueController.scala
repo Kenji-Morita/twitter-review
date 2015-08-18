@@ -22,11 +22,10 @@ class ValueController extends Controller {
       TweetModel.findById(tweetId).flatMap {
         case None => Future.successful(NotFound(createJson(TweetNotFound)))
         case Some(tweet) => getSessionMember(request).flatMap { loginMember =>
-          ValueModel.existsValued(loginMember, tweet).map {
-            case true => BadRequest(createJson(AlreadyValued))
+          ValueModel.existsValued(loginMember, tweet).flatMap {
+            case true => Future.successful(BadRequest(createJson(AlreadyValued)))
             case false => {
-              ValueModel.good(loginMember, tweet)
-              Ok(successJson)
+              ValueModel.good(loginMember, tweet).map(valueCount => Ok(createJson(NoReason, valueCount.toJson)))
             }
           }
         }
@@ -38,11 +37,10 @@ class ValueController extends Controller {
       TweetModel.findById(tweetId).flatMap {
         case None => Future.successful(NotFound(createJson(TweetNotFound)))
         case Some(tweet) => getSessionMember(request).flatMap { loginMember =>
-          ValueModel.existsValued(loginMember, tweet).map {
-            case true => BadRequest(createJson(AlreadyValued))
+          ValueModel.existsValued(loginMember, tweet).flatMap {
+            case true => Future.successful(BadRequest(createJson(AlreadyValued)))
             case false => {
-              ValueModel.bad(loginMember, tweet)
-              Ok(successJson)
+              ValueModel.bad(loginMember, tweet).map(valueCount => Ok(createJson(NoReason, valueCount.toJson)))
             }
           }
         }

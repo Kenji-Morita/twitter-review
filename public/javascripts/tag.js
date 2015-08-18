@@ -1,7 +1,4 @@
-riot.tag('commonfooter', '<footer class="sg-footer"><div class="sg-container"><p>(c)2015 SAW</p></div></footer>', function(opts) {
-});
-
-riot.tag('commonheader', '<header class="sg-header"><ul class="sg-header-contents"><li><h1><a href="/">SAW Twitter</a></h1></li><li class="sg-header-post" if="{opts.isLogin}"><postshare></postshare></li><li class="sg-header-menu" if="{opts.isLogin}"><a href="#" onclick="{doSignOut}">Sign out</a></li></ul></header>', function(opts) {// ===================================================================================
+riot.tag('swt-common', '', function(opts) {// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
@@ -9,19 +6,45 @@ var _this = this;
 //                                                                          Attributes
 //                                                                          ==========
 var request = window.superagent;
-this.member = null;
 this.isLogin = opts.isLogin;
-this.observable = riot.observable();
+this.obs = riot.observable();
 // ===================================================================================
-//                                                                               Event
+//                                                                               Logic
 //                                                                               =====
-request
-    .get("http://google.com")
-    .end(function (error, response) {
-    console.log(response.text);
-});
-this.doSignOut = function (e) {
-    e.preventDefault();
+this.doSignUp = function (mail, password, passwordConfirm) {
+    // empty validate
+    if (mail.isEmpty || password.isEmpty || passwordConfirm.isEmpty) {
+        return;
+    }
+    // sign up
+    request
+        .post("api/auth/signup")
+        .send({ mail: mail, password: password, passwordConfirm: passwordConfirm })
+        .set('Accept', 'application/json')
+        .end(function (error, response) {
+        if (response.ok) {
+            location.reload();
+        }
+    });
+};
+this.doSignIn = function (mail, password) {
+    // empty validate
+    if (mail.isEmpty || password.isEmpty) {
+        return;
+    }
+    // sign in
+    request
+        .post("api/auth/signin")
+        .withCredentials()
+        .send({ mail: mail, password: password })
+        .set('Accept', 'application/json')
+        .end(function (error, response) {
+        if (response.ok) {
+            location.reload();
+        }
+    });
+};
+this.doSignOut = function () {
     request
         .post("/api/auth/signout")
         .withCredentials()
@@ -31,108 +54,9 @@ this.doSignOut = function (e) {
         }
     });
 };
-// ===================================================================================
-//                                                                               Logic
-//                                                                               =====
-var memberKeyPrefix = "member-";
-this.findMemberDetail = function (memberId) {
-    var existsData = localStorage.getItem(memberKeyPrefix + memberId);
-    if (existsData) {
-        _this.member = JSON.parse(existsData);
-        _this.observable.trigger("onLoadMember", _this.member);
-    }
-    else {
-        request
-            .get("/api/member/detail/" + memberId)
-            .end(function (error, response) {
-            if (response.ok) {
-                _this.member = JSON.parse(response.text).value;
-                _this.observable.trigger("onLoadMember", _this.member);
-                localStorage.setItem(memberKeyPrefix + memberId, JSON.stringify(_this.member));
-            }
-        });
-    }
-};
-this.findMemberDetailList = function (memberIds) {
-    var unknownIds = _
-        .chain(memberIds)
-        .uniq()
-        .filter(function (memberId) {
-        var existsData = localStorage.getItem(memberKeyPrefix + memberId);
-        return !existsData;
-    })
-        .value();
-    // request
-    if (unknownIds.length > 0) {
-        request
-            .post("/api/member/details")
-            .send({ memberIdList: unknownIds })
-            .end(function (error, response) {
-            if (response.ok) {
-                var memberJsons = JSON.parse(response.text).value;
-                memberJsons.forEach(function (json) {
-                    var jsonStr = JSON.stringify(json);
-                    localStorage.setItem(memberKeyPrefix + json.memberId, jsonStr);
-                });
-            }
-        });
-    }
-    // event fire
-    var memberDetailList = _
-        .chain(memberIds)
-        .uniq()
-        .map(function (memberId) {
-        return localStorage.getItem(memberKeyPrefix + memberId);
-    })
-        .value();
-    _this.observable.trigger("onLoadMemberList", memberDetailList);
-};
-this.findLoginMemberDetail = function () {
-    if (!opts.isLogin) {
-        return;
-    }
-    var loginMemberKey = "loginMember";
-    var existsData = localStorage.getItem(loginMemberKey);
-    if (existsData) {
-        _this.loginMember = JSON.parse(existsData);
-        _this.observable.trigger("onLoadLoginMember", _this.loginMember);
-    }
-    else {
-        request
-            .get("/api/auth/member/detail")
-            .withCredentials()
-            .end(function (error, response) {
-            if (response.ok) {
-                _this.loginMember = JSON.parse(response.text).value;
-                _this.observable.trigger("onLoadLoginMember", _this.loginMember);
-                var loginMemberJsonStr = JSON.stringify(_this.loginMember);
-                localStorage.setItem(loginMemberKey, loginMemberJsonStr);
-                localStorage.setItem(memberKeyPrefix + _this.loginMember.memberId, loginMemberJsonStr);
-            }
-        });
-    }
-};
-this.findTweetDetail = function (tweetId) {
-    request
-        .get("/api/tweet/detail/" + tweetId)
-        .end(function (error, response) {
-        if (response.ok) {
-            var result = JSON.parse(response.text);
-            _this.tweet = result.value;
-            _this.observable.trigger("onLoadTweet", _this.tweet);
-        }
-    });
-};
-this.findTimeline = function (memberId, before, after) {
-    // set target
-    var url = "/api/timeline/";
-    if (memberId == null) {
-        url += "home";
-    }
-    else {
-        url += "member/" + memberId;
-    }
+this.findTimeline = function (before, after) {
     // set url parameter
+    var url = "/api/timeline/home";
     var existsParameter = false;
     var addParameter = function (key, value) {
         if (!existsParameter) {
@@ -157,341 +81,268 @@ this.findTimeline = function (memberId, before, after) {
         .end(function (error, response) {
         if (response.ok) {
             var timeline = JSON.parse(response.text).value;
-            _this.observable.trigger("onLoadTimeline", timeline);
+            _this.obs.trigger("onLoadTimeline", timeline);
         }
     });
 };
-// ===================================================================================
-//                                                                               Mixin
-//                                                                               =====
-this.mixin({
-    timeline: {
-        targetId: null
-    }
-});
-
-});
-
-riot.tag('follow', '<div if="{opts.isLogin && !isMe}"><button if="{!isFollowing}" onclick="{doFollow}">Follow</button><button if="{isFollowing}" onclick="{doUnFollow}">Unfollow</button></div>', function(opts) {var _this = this;
-// ===================================================================================
-//                                                                          Attributes
-//                                                                          ==========
-var request = window.superagent;
-this.isFollowing = false;
-this.isMe = false;
-// ===================================================================================
-//                                                                               Event
-//                                                                               =====
-if (opts.observable != undefined) {
-    opts.observable.on("onLoadMember", function (member) {
-        opts.member = member;
-        setupFollowStatus();
-    });
-    opts.observable.on("onLoadLoginMember", function (loginMember) {
-        opts.loginMember = loginMember;
-        setupFollowStatus();
-    });
-}
-this.doFollow = function (e) {
-    e.preventDefault();
+this.putGood = function (tweetId) {
     request
-        .post("/api/member/follow/" + opts.member.memberId)
-        .withCredentials()
+        .put("/api/value/good/" + tweetId)
         .end(function (error, response) {
         if (response.ok) {
-            _this.isFollowing = true;
-            _this.update();
+            var valueCount = JSON.parse(response.text).value;
+            _this.obs.trigger("onValueUpdated", { tweetId: tweetId, value: valueCount });
         }
     });
 };
-this.doUnFollow = function (e) {
-    e.preventDefault();
+this.putBad = function (tweetId) {
     request
-        .del("/api/member/unfollow/" + opts.member.memberId)
-        .withCredentials()
+        .put("/api/value/bad/" + tweetId)
         .end(function (error, response) {
         if (response.ok) {
-            _this.isFollowing = false;
-            _this.update();
+            var valueCount = JSON.parse(response.text).value;
+            _this.obs.trigger("onValueUpdated", { tweetId: tweetId, value: valueCount });
         }
     });
 };
-// ===================================================================================
-//                                                                               Logic
-//                                                                               =====
-var setupFollowStatus = function () {
-    if (opts.isLogin && opts.loginMember != undefined && opts.member != undefined) {
-        if (opts.loginMember.following.list.indexOf(opts.member.memberId) >= 0) {
-            _this.isFollowing = true;
-        }
-        _this.isMe = opts.loginMember.memberId == opts.member.memberId;
-        _this.update();
-    }
-};
 
 });
 
-riot.tag('post-share', '', function(opts) {
-});
-
-riot.tag('post', '<form onsubmit="{doPostTweet}" class="sg-post-tweet"><p>tweet length: {tweetLength}</p><textarea oninput="{doInputTweet}"></textarea><button __disabled="{textLengthInvalid}">Tweet</button></form>', function(opts) {var _this = this;
-// ===================================================================================
-//                                                                          Attributes
-//                                                                          ==========
-var request = window.superagent;
-this.tweetLength = 0;
-this.textLengthInvalid = true;
-// ===================================================================================
-//                                                                               Event
-//                                                                               =====
-this.doInputTweet = function (e) {
-    var textarea = e.target;
-    updateTextareaView(textarea.value);
-    _this.update();
-};
-this.doPostTweet = function (e) {
-    e.preventDefault();
-    var textarea = e.target.querySelectorAll("textarea")[0];
-    request
-        .post("/api/tweet/tweet")
-        .withCredentials()
-        .send({ text: textarea.value })
-        .set('Accept', 'application/json')
-        .end(function (error, response) {
-        if (response.ok) {
-            textarea.value = "";
-            updateTextareaView(textarea.value);
-            opts.observable.trigger("onPost");
-        }
-    });
-};
-// ===================================================================================
-//                                                                               Logic
-//                                                                               =====
-var updateTextareaView = function (text) {
-    _this.tweetLength = text.length;
-    if (_this.tweetLength > 140 || _this.tweetLength <= 0) {
-        _this.textLengthInvalid = true;
-    }
-    else {
-        _this.textLengthInvalid = false;
-    }
-    _this.update();
-};
-
-});
-
-riot.tag('postshare', '<form onsubmit="{doPost}" class="{sg-header-post-inputting: isShowComment}"><input type="text" placeholder="share URL" oninput="{doInputURL}"><textarea placeholder="with comment (option)" oninput="{doInputComment}" class="{sg-header-post-inputting: isShowComment}"></textarea><div class="{sg-header-post-submit-inputting: isShowComment}"><p class="{sg-header-post-submit-over: commentLength > 140}">{commentLength}</p><button>Post</button></div></form>', function(opts) {var _this = this;
-// ===================================================================================
-//                                                                          Attributes
-//                                                                          ==========
-this.commentLength = 0;
-this.isShowComment = false;
-// ===================================================================================
-//                                                                               Event
-//                                                                               =====
-this.doInputURL = function (e) {
-    var url = e.target.value;
-    if (url.length > 0) {
-        _this.isShowComment = true;
-        _this.update();
-    }
-    else {
-        _this.isInputWait = false;
-        var form = e.srcElement.parentElement;
-        var textarea = form.querySelector("textarea");
-        var submitBox = form.querySelector("div");
-        textarea.classList.add("sg-header-post-removing");
-        submitBox.classList.add("sg-header-submit-removing");
-        _this.update();
-        setTimeout(function () {
-            _this.isShowComment = false;
-            textarea.classList.remove("sg-header-post-removing");
-            submitBox.classList.remove("sg-header-submit-removing");
-            _this.update();
-        }, 330);
-    }
-};
-this.doInputComment = function (e) {
-    var textarea = e.target;
-    _this.commentLength = textarea.value.length;
-    _this.update();
-};
-this.doPost = function (e) {
-    e.preventDefault();
-};
-
-});
-
-riot.tag('profileaside', '', function(opts) {
-});
-
-riot.tag('profileaside', '<aside class="pg-profile"><img src="/assets/icon/1"><h2>{member.displayName}</h2><p>{member.biography}</p><dl><dt>Followings</dt><dd><a href="/following/{member.memberId}">{member.following.count}</a></dd><dt>Followers</dt><dd><a href="/followers/{member.memberId}">{member.followers.count}</a></dd></dl></aside>', function(opts) {// ===================================================================================
+riot.tag('swt-contents', '<div class="sg-contents {sg-contents-separate: isDetail}"><swt-tweet if="{!isDetail && opts.isLogin}"></swt-tweet><swt-timeline if="{!isDetail}" opts="{opts}"></swt-timeline><swt-detail if="{isDetail}" opts="{opts}"></swt-detail><swt-iframe if="{isDetail}"></swt-iframe><swt-modal if="{isShowModal}" opts="{opts}"></swt-modal></div>', function(opts) {// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
 // ===================================================================================
 //                                                                          Attributes
 //                                                                          ==========
-var request = window.superagent;
-this.member = (opts.timeline.targetId == null) ? opts.loginMember : opts.member;
+this.isDetail = false;
+this.isShowModal = false;
 // ===================================================================================
 //                                                                               Event
 //                                                                               =====
-if (opts.observable != undefined) {
-    opts.observable.on("onLoadLoginMember", function (loginMember) {
-        _this.member = loginMember;
+opts.obs.on("showDetail", function () {
+    _this.isDetail = true;
+    _this.update();
+});
+opts.obs.on("hideDetail", function () {
+    _this.isDetail = false;
+    _this.update();
+});
+opts.obs.on("showModal", function () {
+    _this.isShowModal = true;
+    _this.update();
+});
+opts.obs.on("hideModal", function () {
+    setTimeout(function () {
+        _this.isShowModal = false;
         _this.update();
-    });
-    opts.observable.on("onLoadMember", function (member) {
-        _this.member = member;
-        _this.update();
-    });
-}
+    }, 300);
+});
 
 });
 
-riot.tag('signforms', '<ul><li if="{!toggleState}"><a href="#" onclick="{toggle}">Sign in</a></li><li if="{toggleState}"><a href="#" onclick="{toggle}">Sign up</a></li></ul><form class="pg-sign-in" if="{toggleState}" onsubmit="{doSignIn}"><label if="{signIn.account.isEmpty}">Please input Mail Address or Name!</label><input type="text" name="account" placeholder="Mail address or Name"><label if="{signIn.password.isEmpty}">Please input Password!</label><input type="password" name="signInPassword" placeholder="Password"><button>Sign in</button></form><form class="pg-sign-up" if="{!toggleState}" onsubmit="{doSignUp}"><label if="{signUp.screenName.isEmpty}">Please input Account Name!</label><input type="text" name="screenName" placeholder="Account Name"><label if="{signUp.displayName.isEmpty}">Please input Display Name!</label><input type="text" name="displayName" placeholder="Display Name"><label if="{signUp.mail.isEmpty}">Please input Mail Address!</label><input type="mail" name="mail" placeholder="Mail address"><label if="{signUp.password.isEmpty}">Please input Password!</label><input type="password" name="signUpPassword" placeholder="Password"><label if="{signUp.passwordConfirm.isEmpty}">Please input Password again!</label><input type="password" name="signUpPasswordConfirm" placeholder="Password confirm"><button>Sign up</button></form>', function(opts) {var _this = this;
-// ===================================================================================
-//                                                                          Attributes
-//                                                                          ==========
-var request = window.superagent;
-this.toggleState = true;
-this.signIn = {
-    account: {
-        isEmpty: false
-    },
-    password: {
-        isEmpty: false
-    }
-};
-this.signUp = {
-    screenName: {
-        isEmpty: false
-    },
-    displayName: {
-        isEmpty: false
-    },
-    mail: {
-        isEmpty: false
-    },
-    password: {
-        isEmpty: false
-    },
-    passwordConfirm: {
-        isEmpty: false
-    }
-};
-// ===================================================================================
-//                                                                               Event
-//                                                                               =====
-this.toggle = function (e) {
-    e.preventDefault();
-    // TODO demo
-    var sign = document.querySelector(".pg-sign");
-    sign.classList.toggle("hoge");
-    _this.toggleState = !_this.toggleState;
-};
-this.doSignIn = function (e) {
-    e.preventDefault();
-    var account = _this.account.value.trim();
-    var password = _this.signInPassword.value.trim();
-    // empty validate
-    _this.signIn.account.isEmpty = account == "";
-    _this.signIn.password.isEmpty = password == "";
-    if (_this.signIn.account.isEmpty || _this.signIn.password.isEmpty) {
-        return;
-    }
-    // sign in
-    request
-        .post("api/auth/signin")
-        .withCredentials()
-        .send({ account: account, password: password })
-        .set('Accept', 'application/json')
-        .end(function (error, response) {
-        if (response.ok) {
-            location.reload();
-        }
-        else {
-            var result = JSON.parse(response.text);
-            console.log(result.reason);
-        }
-    });
-};
-this.doSignUp = function (e) {
-    e.preventDefault();
-    var screenName = _this.screenName.value.trim();
-    var displayName = _this.displayName.value.trim();
-    var mail = _this.mail.value.trim();
-    var password = _this.signUpPassword.value.trim();
-    var passwordConfirm = _this.signUpPasswordConfirm.value.trim();
-    // empty validate
-    _this.signUp.screenName.isEmpty = screenName == "";
-    _this.signUp.displayName.isEmpty = displayName == "";
-    _this.signUp.mail.isEmpty = mail == "";
-    _this.signUp.password.isEmpty = password == "";
-    _this.signUp.passwordConfirm.isEmpty = passwordConfirm == "";
-    if (_this.signUp.screenName.isEmpty || _this.signUp.displayName.isEmpty || _this.signUp.mail.isEmpty || _this.signUp.password.isEmpty || _this.signUp.passwordConfirm.isEmpty) {
-        return;
-    }
-    // sign up
-    request
-        .post("api/auth/signup")
-        .send({ screenName: screenName, displayName: displayName, mail: mail, password: password, passwordConfirm: passwordConfirm })
-        .set('Accept', 'application/json')
-        .end(function (error, response) {
-        if (response.ok) {
-            location.reload();
-        }
-    });
-};
-
+riot.tag('swt-detail', '<div class="sg-contents-detail"></div>', function(opts) {
 });
 
-riot.tag('timeline', '<ul class="pg-timeline"><li class="pg-timeline-tweet" each="{tweets}"><img src="http://placehold.jp/64x64.png"><h3><a href="/member/{memberId}">screenName</a></h3><p data-tweet-id="{tweetId}">{text}</p><time><a href="/tweet/{tweetId}">{postedAt}</a></time></li></ul>', function(opts) {// ===================================================================================
+riot.tag('swt-footer', '<footer class="sg-footer"><div class="sg-container"><p>(c)2015 SAW</p></div></footer>', function(opts) {
+});
+
+riot.tag('swt-header', '<header class="sg-header"><ul><li class="sg-header-logo"><h1>Sawitter</h1></li><li if="{isLogin}" class="sg-header-tweet"><a href="#" onclick="{tweetNews}"><i class="fa fa-pencil-square-o"></i></a></li><li class="sg-header-signs"><ul><li if="{!isLogin}" onclick="{onSignin}" class="sg-header-signin"><button>サインイン</button></li><li if="{!isLogin}" onclick="{onSignup}" class="sg-header-signup"><button>登録</button></li><li if="{isLogin}" onclick="{onSignout}" class="sg-header-signout"><button>サインアウト</button></li></ul></li></ul></header><form name="signin" class="sg-header-signs-signin" if="{false}"><label>メールアドレス</label><input type="text" name="signinMail" placeholder="メールアドレスを入力してください"><label>パスワード</label><input type="password" name="signinPassword" placeholder="パスワードを入力してください"></form><form name="signup" class="sg-header-signs-signup" if="{false}"><label>メールアドレス</label><input type="text" name="signupMail" placeholder="メールアドレスを入力してください"><label>パスワード</label><input type="password" name="signupPassword" placeholder="パスワードを入力してください"><label>パスワード(再確認)</label><input type="password" name="signupPasswordConfirm" placeholder="パスワードを再度入力してください"></form>', function(opts) {// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
 // ===================================================================================
 //                                                                          Attributes
 //                                                                          ==========
-var request = window.superagent;
+this.isLogin = opts.isLogin;
+// ===================================================================================
+//                                                                               Event
+//                                                                               =====
+this.tweetNews = function (e) {
+    e.preventDefault();
+    var runTime = 10;
+    var fps = 60;
+    var diffY = window.scrollY / fps;
+    var scrollToTop = function () {
+        var currentY = window.scrollY;
+        var targetY = currentY - diffY;
+        var targetY = targetY <= 0 ? 0 : targetY;
+        if (currentY > 0) {
+            window.scrollTo(0, targetY);
+            if (targetY > 0) {
+                setTimeout(scrollToTop, runTime / fps);
+            }
+        }
+    };
+    scrollToTop();
+};
+this.onSignin = function (e) {
+    e.preventDefault();
+    opts.obs.trigger("showModal", {
+        title: "サインイン",
+        raw: _this.signin.innerHTML,
+        okButtonMsg: "サインイン",
+        ngButtonMsg: "キャンセル",
+        ok: function (raw) {
+            var mail = raw.querySelector('input[name="signinMail"]').value.trim();
+            var password = raw.querySelector('input[name="signinPassword"]').value.trim();
+            if (mail == "") {
+                alert("メールアドレスが入力されていません");
+                return;
+            }
+            if (password == "") {
+                alert("パスワードが入力されていません");
+                return;
+            }
+            opts.doSignIn(mail, password);
+        },
+        ng: function (raw) {
+            opts.obs.trigger("hideModal");
+        }
+    });
+};
+this.onSignup = function (e) {
+    e.preventDefault();
+    opts.obs.trigger("showModal", {
+        title: "登録",
+        raw: _this.signup.innerHTML,
+        okButtonMsg: "登録",
+        ngButtonMsg: "キャンセル",
+        ok: function (raw) {
+            var mail = raw.querySelector('input[name="signupMail"]').value.trim();
+            var password = raw.querySelector('input[name="signupPassword"]').value.trim();
+            var passwordConfirm = raw.querySelector('input[name="signupPasswordConfirm"]').value.trim();
+            if (mail == "") {
+                alert("メールアドレスが入力されていません");
+                return;
+            }
+            if (password == "") {
+                alert("パスワードが入力されていません");
+                return;
+            }
+            if (passwordConfirm == "") {
+                alert("パスワード(再確認)が入力されていません");
+                return;
+            }
+            opts.doSignUp(mail, password, passwordConfirm);
+        },
+        ng: function (raw) {
+            opts.obs.trigger("hideModal");
+        }
+    });
+};
+this.onSignout = function (e) {
+    e.preventDefault();
+    opts.doSignOut();
+};
+
+});
+
+riot.tag('swt-iframe', '<iframe class="sg-contents-iframe"></iframe>', function(opts) {
+});
+
+riot.tag('swt-modal', '<div class="sg-contents-modal"><div class="{sg-contents-modal-bg: isShowModal}" onclick="{closeModal}"></div><div if="{isShowModal}" class="sg-contents-modal-contents"><section><header class="sg-contents-modal-contents-header"><h1>{contents.title}</h1></header><div name="raw" class="sg-contents-modal-contents-msg"></div><footer class="sg-contents-modal-contents-footer"><ul><li><button onclick="{onOk}">{contents.okButtonMsg}</button></li><li><button onclick="{onNg}">{contents.ngButtonMsg}</button></li></ul></footer></section></div></div>', function(opts) {// ===================================================================================
+//                                                                             Declare
+//                                                                             =======
+var _this = this;
+var opts = opts.opts;
+// ===================================================================================
+//                                                                          Attributes
+//                                                                          ==========
+this.isShowModal = false;
+this.contents = {};
+// ===================================================================================
+//                                                                               Event
+//                                                                               =====
+this.closeModal = function (e) {
+    e.preventDefault();
+    opts.obs.trigger("hideModal");
+};
+this.onOk = function (e) {
+    e.preventDefault();
+    _this.contents.ok(_this.raw);
+};
+this.onNg = function (e) {
+    e.preventDefault();
+    _this.contents.ng(_this.raw);
+};
+opts.obs.on("showModal", function (contents) {
+    _this.contents = contents;
+    _this.raw.innerHTML = contents.raw;
+    setTimeout(function () {
+        _this.isShowModal = true;
+        _this.update();
+    }, 1);
+});
+opts.obs.on("hideModal", function () {
+    _this.contents = {};
+    _this.raw.innerHTML = "";
+    _this.isShowModal = false;
+    _this.update();
+});
+
+});
+
+riot.tag('swt-raw', '<div></div>', function(opts) {// ===================================================================================
+//                                                                             Declare
+//                                                                             =======
+// ===================================================================================
+//                                                                               Logic
+//                                                                               =====
+this.root.innerHTML = opts.content;
+this.update();
+
+});
+
+riot.tag('swt-timeline', '<ul class="sg-contents-timeline {sg-contents-timeline-detail: isDetail}"><li each="{tweets}"><section><dl class="sg-contents-timeline-share"><dt><a href="/content/{shareContents.shareContentsId}" data-id="{shareContents.shareContentsId}" onclick="{onClickDetail}"><img riot-src="{shareContents.thumbnailUrl}" alt="{shareContents.title}"></a></dt><dd><h1><a href="/content/{shareContents.shareContentsId}" data-id="{shareContents.shareContentsId}" onclick="{onClickDetail}"> {shareContents.title} </a></h1></dd></dl><dl class="sg-contents-timeline-comment"><dt><i class="fa fa-user fa-2x"></i></dt><dd><p>{tweet.comment}</p><time>{tweet.postedAt}</time></dd></dl><ul class="sg-contents-timeline-btn"><li><a class="sg-contents-timeline-btn-good" onclick="{onPutGood}" __disabled="{!opts.isLogin}" href="#"><i class="fa fa-thumbs-up"></i> {value.good} <span data-id="{tweet.tweetId}"><i class="fa fa-thumbs-up"></i> Good </span></a></li><li><a class="sg-contents-timeline-btn-bad" onclick="{onPutBad}" __disabled="{!opts.isLogin}" href="#"><i class="fa fa-thumbs-down"></i> {value.bad} <span data-id="{tweet.tweetId}"><i class="fa fa-thumbs-down"></i> Bad </span></a></li></ul></section></li></ul>', function(opts) {// ===================================================================================
+//                                                                             Declare
+//                                                                             =======
+var _this = this;
+var opts = opts.opts;
+// ===================================================================================
+//                                                                          Attributes
+//                                                                          ==========
+this.isDetail = false;
 this.tweets = [];
+var request = window.superagent;
 // ===================================================================================
 //                                                                               Event
 //                                                                               =====
-opts.observable.on("onPost", function () {
-    setTimeout(callFindTimeline, 1000);
-});
-opts.observable.on("onLoadTimeline", function (timeline) {
-    var memberIds = [];
-    _this.tweets = _
-        .chain(timeline)
-        .map(function (json) {
-        memberIds.push(json.memberId);
-        return {
-            memberId: json.memberId,
-            tweetId: json.tweetId,
-            text: json.text,
-            postedAt: json.postedAt,
-            timestamp: json.timestamp,
-            reTweet: json.reTweet
-        };
-    })
-        .concat(_this.tweets)
-        .value();
+this.onClickDetail = function (e) {
+    e.preventDefault();
+};
+this.onPutGood = function (e) {
+    e.preventDefault();
+    opts.putGood(e.target.getAttribute("data-id"));
+};
+this.onPutBad = function (e) {
+    e.preventDefault();
+    opts.putBad(e.target.getAttribute("data-id"));
+};
+opts.obs.on("onLoadTimeline", function (timeline) {
+    _this.tweets = timeline;
     _this.update();
-    opts.findMemberDetailList(memberIds);
+});
+opts.obs.on("showDetail", function () {
+    _this.isDetail = true;
+    _this.update();
+});
+opts.obs.on("hideDetail", function () {
+    _this.isDetail = false;
+    _this.update();
+});
+opts.obs.on("onValueUpdated", function (valueInfo) {
+    _this.update();
 });
 // ===================================================================================
 //                                                                               Logic
 //                                                                               =====
 var callFindTimeline = function () {
     if (_this.tweets.length > 0) {
-        opts.findTimeline(opts.timeline.targetId, null, _this.tweets[0].timestamp);
+        opts.findTimeline(null, _this.tweets[0].timestamp);
     }
     else {
-        opts.findTimeline(opts.timeline.targetId);
+        opts.findTimeline();
     }
 };
 var looper = function () {
@@ -502,27 +353,41 @@ looper();
 
 });
 
-riot.tag('tweet', '<section><header><img alt="memberIcon" src="/assets/icon/1"><dl><dt>{opts.member.displayName}</dt><dd>@{opts.member.screenName}</dd></dl><follow></follow></header><p if="{isRetweet}">{opts.tweet.reTweet.text}</p><p>{opts.tweet.text}</p><footer><time>{opts.tweet.postedAt}</time></footer></section>', function(opts) {// ===================================================================================
-//                                                                             Declare
-//                                                                             =======
-var _this = this;
-// ===================================================================================
+riot.tag('swt-tweet', '<div class="sg-contents-tweet"><form onsubmit="{onSubmit}"><input type="text" name="tweet-url" oninput="{onInputUrl}" placeholder="気になったWEBページのアドレスを入力"><textarea name="tweet-comment" if="{isStartDisplayComment}" oninput="{onInputComment}" class="{sg-contents-tweet-comment-show: isDisplayComment}" placeholder="コメントを入力"></textarea><div class="sg-contents-tweet-submit"><span class="{sg-contents-tweet-submit-invalid: commentLength > 140}">{commentLength}</span><button>投稿</button></div></form></div>', function(opts) {// ===================================================================================
 //                                                                          Attributes
 //                                                                          ==========
-var request = window.superagent;
-this.isRetweet = false;
+var _this = this;
+this.isStartDisplayComment = false;
+this.isDisplayComment = false;
+this.commentLength = 0;
 // ===================================================================================
 //                                                                               Event
 //                                                                               =====
-if (opts.observable != undefined) {
-    opts.observable.on("onLoadTweet", function (tweet) {
+this.onInputUrl = function (e) {
+    var url = e.target.value;
+    if (url.length > 0) {
+        _this.isStartDisplayComment = true;
         _this.update();
-        opts.findMemberDetail(opts.tweet.memberId);
-    });
-    opts.observable.on("onLoadMember", function (member) {
-        opts.member = member;
+        setTimeout(function () {
+            _this.isDisplayComment = true;
+            _this.update();
+        }, 1);
+    }
+    else {
+        _this.isDisplayComment = false;
         _this.update();
-    });
-}
+        setTimeout(function () {
+            _this.isStartDisplayComment = false;
+            _this.update();
+        }, 200);
+    }
+};
+this.onInputComment = function (e) {
+    _this.commentLength = e.target.value.length;
+    _this.update();
+};
+this.onSubmit = function (e) {
+    e.preventDefault();
+};
 
 });
