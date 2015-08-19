@@ -19,9 +19,7 @@ this.onClickDetail = function (e) {
         window.open(e.item.shareContents.url);
     }
     var shareContentsId = e.item.shareContents.shareContentsId;
-    opts.obs.trigger("showDetail", shareContentsId);
-    opts.findContentsDetail(shareContentsId);
-    history.pushState(e.item.shareContents.title, null, '/contents/' + shareContentsId);
+    opts.showDetail(shareContentsId);
 };
 this.onPutGood = function (e) {
     e.preventDefault();

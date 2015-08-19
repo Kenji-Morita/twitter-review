@@ -3,7 +3,7 @@
     <ul>
       <li class="sg-header-logo">
         <h1>
-          <a href="/">Sawitter</a>
+          <a href="/"><i class="fa fa-user-secret fa"></i> Sawitter</a>
         </h1>
       </li>
       <li if={isLogin} class="sg-header-tweet">

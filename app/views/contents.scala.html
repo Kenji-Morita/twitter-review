@@ -10,6 +10,9 @@
     <link href="/assets/stylesheets/style.css" rel="stylesheet" />
     <script src="/assets/javascripts/lodash.min.js"></script>
     <script src="/assets/javascripts/superagent.js"></script>
+    <script src="/assets/javascripts/pnglib.js"></script>
+    <script src="/assets/javascripts/sha.js"></script>
+    <script src="/assets/javascripts/identicon.js"></script>
     <script src="/assets/javascripts/riot.min.js"></script>
     <script src="/assets/javascripts/tag.min.js"></script>
 </head>
@@ -26,8 +29,7 @@
     riot.mount("swt-contents", common);
     riot.mount("swt-tweet", common);
     riot.mount("swt-footer", common);
-    common.obs.trigger("showDetail", "@{shareContentsId}");
-    common.findContentsDetail("@{shareContentsId}");
+    common.showDetail("@{shareContentsId}");
 </script>
 </body>
 </html>

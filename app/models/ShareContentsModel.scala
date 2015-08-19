@@ -10,6 +10,7 @@ import play.api.Play.current
 import com.sksamuel.elastic4s.ElasticDsl._
 
 import utils.ElasticsearchUtil
+import utils.HashUtil.crypt
 
 import scala.util.matching.Regex
 
@@ -20,7 +21,8 @@ case class ShareContentsDetail(shareContents: ShareContents, tweets: List[Tweet]
       ValueModel.countValueByTweet(tweet).map { valueCount =>
         Map(
           "tweet" -> tweet.toJson,
-          "value" -> valueCount.toJson
+          "value" -> valueCount.toJson,
+          "identityHash" -> Json.toJson(crypt(tweet.memberId + " - SAW APP - " + shareContents.shareContentsId))
         )
       }
     }

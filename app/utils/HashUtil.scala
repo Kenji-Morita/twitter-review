@@ -5,7 +5,7 @@ import java.security.MessageDigest
 /**
  * @author SAW
  */
-object PasswordUtil {
+object HashUtil {
 
   def crypt(input: String): String = {
     val digestInstance = MessageDigest.getInstance("SHA-512")

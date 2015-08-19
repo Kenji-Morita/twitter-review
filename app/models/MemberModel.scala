@@ -2,7 +2,7 @@ package models
 
 import org.elasticsearch.action.index.IndexResponse
 import utils.ElasticsearchUtil
-import utils.PasswordUtil.crypt
+import utils.HashUtil.crypt
 import com.sksamuel.elastic4s.ElasticDsl._
 
 import scala.concurrent.Future

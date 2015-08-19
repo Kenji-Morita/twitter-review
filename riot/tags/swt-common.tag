@@ -7,8 +7,13 @@
     declare var riot: any;
     declare var opts: any;
     declare var _: any;
+    declare var Identicon: any;
+    declare var jsSHA: any;
     interface Window {
       superagent: any;
+    }
+    interface Event {
+      originalEvent: any;
     }
     interface EventTarget {
       location: any;
@@ -80,7 +85,7 @@
       // set url parameter
       var url = "/api/timeline/home";
       var existsParameter = false;
-      var addParameter = function (key, value) {
+      var addParameter = (key, value) => {
           if (!existsParameter) {
               url += "?";
               existsParameter = true;
@@ -154,6 +159,23 @@
         });
     };
 
+    this.showDetail = shareContentsId => {
+      this.obs.trigger("showDetail", shareContentsId);
+      this.findContentsDetail(shareContentsId);
+      history.pushState(null, null, '/contents/' + shareContentsId);
+    };
+
+    this.generateIcon = input => {
+      var salt = 0;
+      var rounds = 1;
+      var size = 32;
+      var outputType = "HEX";
+      var hashType = "SHA-512";
+      var shaObj = new jsSHA(input + salt, "TEXT");
+      var hash = shaObj.getHash(hashType, outputType, rounds);
+      return new Identicon(hash, 32).toString();
+    };
+
     window.addEventListener("keydown", e => {
       var keyCode = e.keyCode;
       var index = this.currentKeyCodes.indexOf(keyCode);
@@ -174,7 +196,8 @@
       if (path == "/") {
         this.obs.trigger("hideDetail");
       } else {
-        // TODO 進む時の動作
+        var array = path.split("/");
+        this.showDetail(array[array.length - 1]);
       }
     });
 

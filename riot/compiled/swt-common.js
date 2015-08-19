@@ -127,6 +127,21 @@ this.findContentsDetail = function (shareContentsId) {
         }
     });
 };
+this.showDetail = function (shareContentsId) {
+    _this.obs.trigger("showDetail", shareContentsId);
+    _this.findContentsDetail(shareContentsId);
+    history.pushState(null, null, '/contents/' + shareContentsId);
+};
+this.generateIcon = function (input) {
+    var salt = 0;
+    var rounds = 1;
+    var size = 32;
+    var outputType = "HEX";
+    var hashType = "SHA-512";
+    var shaObj = new jsSHA(input + salt, "TEXT");
+    var hash = shaObj.getHash(hashType, outputType, rounds);
+    return new Identicon(hash, 32).toString();
+};
 window.addEventListener("keydown", function (e) {
     var keyCode = e.keyCode;
     var index = _this.currentKeyCodes.indexOf(keyCode);
@@ -146,6 +161,8 @@ window.addEventListener("popstate", function (e) {
         _this.obs.trigger("hideDetail");
     }
     else {
+        var array = path.split("/");
+        _this.showDetail(array[array.length - 1]);
     }
 });
 

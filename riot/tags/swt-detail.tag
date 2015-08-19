@@ -5,12 +5,13 @@
         <h1><a href="{contents.shareContents.url}" target="_blank">{contents.shareContents.title}</a></h1>
         <p>{contents.shareContents.url}</p>
       </header>
+      <swt-tweet-comment opts={opts} url={contents.shareContents.url}></swt-tweet-comment>
       <ul class="sg-contents-detail-timeline">
         <li each={contents.tweets}>
           <section>
             <dl class="sg-contents-timeline-comment">
               <dt>
-                <i class="fa fa-user fa-2x"></i>
+                <img alt="icon" src="data:image/png;base64,{this.generateIcon(identityHash)}">
               </dt>
               <dd>
                 <p>{tweet.comment}</p>
@@ -63,5 +64,14 @@
       this.contents = contents;
       this.update();
     });
+
+    // ===================================================================================
+    //                                                                               Logic
+    //                                                                               =====
+
+    this.generateIcon = hash => {
+      var source = opts.generateIcon(hash);
+      return source;
+    }
   </script>
 </swt-detail>

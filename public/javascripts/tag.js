@@ -127,6 +127,21 @@ this.findContentsDetail = function (shareContentsId) {
         }
     });
 };
+this.showDetail = function (shareContentsId) {
+    _this.obs.trigger("showDetail", shareContentsId);
+    _this.findContentsDetail(shareContentsId);
+    history.pushState(null, null, '/contents/' + shareContentsId);
+};
+this.generateIcon = function (input) {
+    var salt = 0;
+    var rounds = 1;
+    var size = 32;
+    var outputType = "HEX";
+    var hashType = "SHA-512";
+    var shaObj = new jsSHA(input + salt, "TEXT");
+    var hash = shaObj.getHash(hashType, outputType, rounds);
+    return new Identicon(hash, 32).toString();
+};
 window.addEventListener("keydown", function (e) {
     var keyCode = e.keyCode;
     var index = _this.currentKeyCodes.indexOf(keyCode);
@@ -146,6 +161,8 @@ window.addEventListener("popstate", function (e) {
         _this.obs.trigger("hideDetail");
     }
     else {
+        var array = path.split("/");
+        _this.showDetail(array[array.length - 1]);
     }
 });
 
@@ -187,7 +204,7 @@ opts.obs.on("hideModal", function () {
 riot.tag('swt-cover', '<div class="sg-contents-cover"><ul></ul></div>', function(opts) {
 });
 
-riot.tag('swt-detail', '<div class="sg-contents-detail"><section><header><h1><a href="{contents.shareContents.url}" target="_blank">{contents.shareContents.title}</a></h1><p>{contents.shareContents.url}</p></header><ul class="sg-contents-detail-timeline"><li each="{contents.tweets}"><section><dl class="sg-contents-timeline-comment"><dt><i class="fa fa-user fa-2x"></i></dt><dd><p>{tweet.comment}</p><time>{tweet.postedAt}</time></dd></dl><ul class="sg-contents-timeline-btn"><li><a class="sg-contents-timeline-btn-good" onclick="{onPutGood}" __disabled="{!opts.isLogin}" href="#"><i class="fa fa-thumbs-up"></i> {value.good} <span data-id="{tweet.tweetId}"><i class="fa fa-thumbs-up"></i> Good </span></a></li><li><a class="sg-contents-timeline-btn-bad" onclick="{onPutBad}" __disabled="{!opts.isLogin}" href="#"><i class="fa fa-thumbs-down"></i> {value.bad} <span data-id="{tweet.tweetId}"><i class="fa fa-thumbs-down"></i> Bad </span></a></li></ul></section></li></ul></section></div>', function(opts) {// ===================================================================================
+riot.tag('swt-detail', '<div class="sg-contents-detail"><section><header><h1><a href="{contents.shareContents.url}" target="_blank">{contents.shareContents.title}</a></h1><p>{contents.shareContents.url}</p></header><swt-tweet-comment opts="{opts}" url="{contents.shareContents.url}"></swt-tweet-comment><ul class="sg-contents-detail-timeline"><li each="{contents.tweets}"><section><dl class="sg-contents-timeline-comment"><dt><img alt="icon" riot-src="data:image/png;base64,{this.generateIcon(identityHash)}"></dt><dd><p>{tweet.comment}</p><time>{tweet.postedAt}</time></dd></dl><ul class="sg-contents-timeline-btn"><li><a class="sg-contents-timeline-btn-good" onclick="{onPutGood}" __disabled="{!opts.isLogin}" href="#"><i class="fa fa-thumbs-up"></i> {value.good} <span data-id="{tweet.tweetId}"><i class="fa fa-thumbs-up"></i> Good </span></a></li><li><a class="sg-contents-timeline-btn-bad" onclick="{onPutBad}" __disabled="{!opts.isLogin}" href="#"><i class="fa fa-thumbs-down"></i> {value.bad} <span data-id="{tweet.tweetId}"><i class="fa fa-thumbs-down"></i> Bad </span></a></li></ul></section></li></ul></section></div>', function(opts) {// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
@@ -203,13 +220,20 @@ opts.obs.on("onContentsLoaded", function (contents) {
     _this.contents = contents;
     _this.update();
 });
+// ===================================================================================
+//                                                                               Logic
+//                                                                               =====
+this.generateIcon = function (hash) {
+    var source = opts.generateIcon(hash);
+    return source;
+};
 
 });
 
 riot.tag('swt-footer', '<footer class="sg-footer"><div class="sg-container"><p>(c)2015 SAW</p></div></footer>', function(opts) {
 });
 
-riot.tag('swt-header', '<header class="sg-header"><ul><li class="sg-header-logo"><h1><a href="/">Sawitter</a></h1></li><li if="{isLogin}" class="sg-header-tweet"><a href="#" onclick="{tweetNews}"><i class="fa fa-pencil-square-o"></i></a></li><li class="sg-header-signs"><ul><li if="{!isLogin}" onclick="{onSignin}" class="sg-header-signin"><button>サインイン</button></li><li if="{!isLogin}" onclick="{onSignup}" class="sg-header-signup"><button>登録</button></li><li if="{isLogin}" onclick="{onSignout}" class="sg-header-signout"><button>サインアウト</button></li></ul></li></ul></header><form name="signin" class="sg-header-signs-signin" if="{false}"><label>メールアドレス</label><input type="text" name="signinMail" placeholder="メールアドレスを入力してください"><label>パスワード</label><input type="password" name="signinPassword" placeholder="パスワードを入力してください"></form><form name="signup" class="sg-header-signs-signup" if="{false}"><label>メールアドレス</label><input type="text" name="signupMail" placeholder="メールアドレスを入力してください"><label>パスワード</label><input type="password" name="signupPassword" placeholder="パスワードを入力してください"><label>パスワード(再確認)</label><input type="password" name="signupPasswordConfirm" placeholder="パスワードを再度入力してください"></form>', function(opts) {// ===================================================================================
+riot.tag('swt-header', '<header class="sg-header"><ul><li class="sg-header-logo"><h1><a href="/"><i class="fa fa-user-secret fa"></i> Sawitter</a></h1></li><li if="{isLogin}" class="sg-header-tweet"><a href="#" onclick="{tweetNews}"><i class="fa fa-pencil-square-o"></i></a></li><li class="sg-header-signs"><ul><li if="{!isLogin}" onclick="{onSignin}" class="sg-header-signin"><button>サインイン</button></li><li if="{!isLogin}" onclick="{onSignup}" class="sg-header-signup"><button>登録</button></li><li if="{isLogin}" onclick="{onSignout}" class="sg-header-signout"><button>サインアウト</button></li></ul></li></ul></header><form name="signin" class="sg-header-signs-signin" if="{false}"><label>メールアドレス</label><input type="text" name="signinMail" placeholder="メールアドレスを入力してください"><label>パスワード</label><input type="password" name="signinPassword" placeholder="パスワードを入力してください"></form><form name="signup" class="sg-header-signs-signup" if="{false}"><label>メールアドレス</label><input type="text" name="signupMail" placeholder="メールアドレスを入力してください"><label>パスワード</label><input type="password" name="signupPassword" placeholder="パスワードを入力してください"><label>パスワード(再確認)</label><input type="password" name="signupPasswordConfirm" placeholder="パスワードを再度入力してください"></form>', function(opts) {// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
@@ -377,9 +401,7 @@ this.onClickDetail = function (e) {
         window.open(e.item.shareContents.url);
     }
     var shareContentsId = e.item.shareContents.shareContentsId;
-    opts.obs.trigger("showDetail", shareContentsId);
-    opts.findContentsDetail(shareContentsId);
-    history.pushState(e.item.shareContents.title, null, '/contents/' + shareContentsId);
+    opts.showDetail(shareContentsId);
 };
 this.onPutGood = function (e) {
     e.preventDefault();
@@ -423,6 +445,57 @@ var looper = function () {
     setTimeout(looper, 10000);
 };
 looper();
+
+});
+
+riot.tag('swt-tweet-comment', '<div class="sg-contents-tweet"><form onsubmit="{onSubmit}"><input type="hidden" value="{opts.url}" name="tweetUrl" ><textarea name="tweetComment" oninput="{onInputComment}" class="sg-contents-tweet-comment-show" placeholder="コメントを入力"></textarea><div class="sg-contents-tweet-submit"><span class="{sg-contents-tweet-submit-invalid: commentLength > 140}">{commentLength}</span><button __disabled="{commentLength <= 0 || commentLength > 140}">投稿</button></div></form></div>', function(opts) {// ===================================================================================
+//                                                                             Declare
+//                                                                             =======
+var _this = this;
+var opts = opts.opts.opts;
+// ===================================================================================
+//                                                                          Attributes
+//                                                                          ==========
+this.commentLength = 0;
+// ===================================================================================
+//                                                                               Event
+//                                                                               =====
+this.onInputComment = function (e) {
+    _this.commentLength = e.target.value.length;
+    _this.update();
+};
+this.onSubmit = function (e) {
+    e.preventDefault();
+    var urlObj = _this.tweetUrl;
+    var commentObj = _this.tweetComment;
+    var url = urlObj.value.trim();
+    var comment = commentObj.value.trim();
+    if (url == "") {
+        alert("URLを入力してください");
+        return;
+    }
+    if (comment == "") {
+        alert("コメントを入力してください");
+        return;
+    }
+    opts.obs.trigger("showModal", {
+        title: "投稿確認",
+        msg: comment,
+        msgSub: "WEBページ(" + url + ")について、このコメントを投稿してもよろしいでしょうか？",
+        okButtonMsg: "投稿",
+        ngButtonMsg: "キャンセル",
+        ok: function () {
+            opts.doPost(url, comment);
+            urlObj.value = "";
+            commentObj.value = "";
+            _this.commentLength = 0;
+            opts.obs.trigger("hideModal");
+        },
+        ng: function () {
+            opts.obs.trigger("hideModal");
+        }
+    });
+};
 
 });
 

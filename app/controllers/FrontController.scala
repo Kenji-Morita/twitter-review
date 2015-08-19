@@ -13,7 +13,7 @@ import models.TweetModel
 class FrontController extends Controller {
 
    def index = Action.async {
-     implicit request =>
+     request =>
        getSessionMemberOpt(request).map(loginMemberOpt => Ok(views.html.index(loginMemberOpt)))
    }
 
@@ -24,8 +24,7 @@ class FrontController extends Controller {
 
    // TODO
    def confirmHash(memberId: String, confirmHash: String) = Action {
-     implicit request =>
-       Ok
+     Ok
    }
 
   def tweet(tweetId: String) = Action.async {

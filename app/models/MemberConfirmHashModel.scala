@@ -8,7 +8,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import com.sksamuel.elastic4s.ElasticDsl._
 
 import utils.ElasticsearchUtil
-import utils.PasswordUtil.crypt
+import utils.HashUtil.crypt
 
 /**
  * @author SAW
