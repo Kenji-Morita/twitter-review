@@ -8,6 +8,7 @@ var _this = this;
 var request = window.superagent;
 this.isLogin = opts.isLogin;
 this.obs = riot.observable();
+this.currentKeyCodes = [];
 // ===================================================================================
 //                                                                               Logic
 //                                                                               =====
@@ -86,8 +87,15 @@ this.findTimeline = function (before, after) {
     });
 };
 this.doPost = function (url, comment) {
-    console.log("a");
-    _this.obs.trigger("onPosted");
+    request
+        .post("/api/tweet/tweet")
+        .send({ url: url, comment: comment })
+        .set('Accept', 'application/json')
+        .end(function (error, response) {
+        if (response.ok) {
+            _this.obs.trigger("onPosted");
+        }
+    });
 };
 this.putGood = function (tweetId) {
     request
@@ -109,10 +117,41 @@ this.putBad = function (tweetId) {
         }
     });
 };
+this.findContentsDetail = function (shareContentsId) {
+    request
+        .get("/api/contents/" + shareContentsId)
+        .end(function (error, response) {
+        if (response.ok) {
+            var contents = JSON.parse(response.text).value;
+            _this.obs.trigger("onContentsLoaded", contents);
+        }
+    });
+};
+window.addEventListener("keydown", function (e) {
+    var keyCode = e.keyCode;
+    var index = _this.currentKeyCodes.indexOf(keyCode);
+    if (index < 0) {
+        _this.currentKeyCodes.push(keyCode);
+    }
+});
+window.addEventListener("keyup", function (e) {
+    var index = _this.currentKeyCodes.indexOf(e.keyCode);
+    if (index >= 0) {
+        _this.currentKeyCodes.splice(index, 1);
+    }
+});
+window.addEventListener("popstate", function (e) {
+    var path = e.target.location.pathname;
+    if (path == "/") {
+        _this.obs.trigger("hideDetail");
+    }
+    else {
+    }
+});
 
 });
 
-riot.tag('swt-contents', '<div class="sg-contents {sg-contents-separate: isDetail}"><swt-cover if="{!isDetail && !opts.isLogin}"></swt-cover><swt-tweet if="{!isDetail && opts.isLogin}"></swt-tweet><swt-timeline if="{!isDetail}" opts="{opts}"></swt-timeline><swt-detail if="{isDetail}" opts="{opts}"></swt-detail><swt-iframe if="{isDetail}"></swt-iframe><swt-modal if="{isShowModal}" opts="{opts}"></swt-modal></div>', function(opts) {// ===================================================================================
+riot.tag('swt-contents', '<div class="sg-contents {sg-contents-separate: isDetail}"><swt-cover if="{!isDetail && !opts.isLogin}"></swt-cover><swt-tweet if="{!isDetail && opts.isLogin}"></swt-tweet><swt-timeline if="{!isDetail}" opts="{opts}"></swt-timeline><swt-detail if="{isDetail}" opts="{opts}"></swt-detail><swt-iframe if="{isDetail}" opts="{opts}"></swt-iframe><swt-modal if="{isShowModal}" opts="{opts}"></swt-modal></div>', function(opts) {// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
@@ -148,7 +187,23 @@ opts.obs.on("hideModal", function () {
 riot.tag('swt-cover', '<div class="sg-contents-cover"><ul></ul></div>', function(opts) {
 });
 
-riot.tag('swt-detail', '<div class="sg-contents-detail"></div>', function(opts) {
+riot.tag('swt-detail', '<div class="sg-contents-detail"><section><header><h1><a href="{contents.shareContents.url}" target="_blank">{contents.shareContents.title}</a></h1><p>{contents.shareContents.url}</p></header><ul class="sg-contents-detail-timeline"><li each="{contents.tweets}"><section><dl class="sg-contents-timeline-comment"><dt><i class="fa fa-user fa-2x"></i></dt><dd><p>{tweet.comment}</p><time>{tweet.postedAt}</time></dd></dl><ul class="sg-contents-timeline-btn"><li><a class="sg-contents-timeline-btn-good" onclick="{onPutGood}" __disabled="{!opts.isLogin}" href="#"><i class="fa fa-thumbs-up"></i> {value.good} <span data-id="{tweet.tweetId}"><i class="fa fa-thumbs-up"></i> Good </span></a></li><li><a class="sg-contents-timeline-btn-bad" onclick="{onPutBad}" __disabled="{!opts.isLogin}" href="#"><i class="fa fa-thumbs-down"></i> {value.bad} <span data-id="{tweet.tweetId}"><i class="fa fa-thumbs-down"></i> Bad </span></a></li></ul></section></li></ul></section></div>', function(opts) {// ===================================================================================
+//                                                                             Declare
+//                                                                             =======
+var _this = this;
+var opts = opts.opts;
+// ===================================================================================
+//                                                                          Attributes
+//                                                                          ==========
+this.contents = {};
+// ===================================================================================
+//                                                                               Event
+//                                                                               =====
+opts.obs.on("onContentsLoaded", function (contents) {
+    _this.contents = contents;
+    _this.update();
+});
+
 });
 
 riot.tag('swt-footer', '<footer class="sg-footer"><div class="sg-container"><p>(c)2015 SAW</p></div></footer>', function(opts) {
@@ -245,7 +300,18 @@ this.onSignout = function (e) {
 
 });
 
-riot.tag('swt-iframe', '<iframe class="sg-contents-iframe"></iframe>', function(opts) {
+riot.tag('swt-iframe', '<iframe class="sg-contents-iframe" name="contentsIframe"></iframe>', function(opts) {// ===================================================================================
+//                                                                             Declare
+//                                                                             =======
+var _this = this;
+var opts = opts.opts;
+// ===================================================================================
+//                                                                               Event
+//                                                                               =====
+opts.obs.on("onContentsLoaded", function (contents) {
+    _this.contentsIframe.src = contents.shareContents.url;
+});
+
 });
 
 riot.tag('swt-modal', '<div class="sg-contents-modal"><div class="{sg-contents-modal-bg: isShowModal}" onclick="{closeModal}"></div><div if="{isShowModal}" class="sg-contents-modal-contents"><section><header class="sg-contents-modal-contents-header"><h1>{contents.title}</h1></header><div if="{contents.raw != null}" name="raw" class="sg-contents-modal-contents-raw"></div><div if="{contents.msg != null}">{contents.msg}</div><div if="{contents.msgSub != null}" class="sg-contents-modal-contents-msg-sub">{contents.msgSub}</div><footer class="sg-contents-modal-contents-footer"><ul><li><button onclick="{onOk}">{contents.okButtonMsg}</button></li><li><button onclick="{onNg}">{contents.ngButtonMsg}</button></li></ul></footer></section></div></div>', function(opts) {// ===================================================================================
@@ -290,18 +356,7 @@ opts.obs.on("hideModal", function () {
 
 });
 
-riot.tag('swt-raw', '<div></div>', function(opts) {// ===================================================================================
-//                                                                             Declare
-//                                                                             =======
-// ===================================================================================
-//                                                                               Logic
-//                                                                               =====
-this.root.innerHTML = opts.content;
-this.update();
-
-});
-
-riot.tag('swt-timeline', '<ul class="sg-contents-timeline {sg-contents-timeline-detail: isDetail}"><li each="{tweets}"><section><dl class="sg-contents-timeline-share"><dt><a href="/content/{shareContents.shareContentsId}" data-id="{shareContents.shareContentsId}" onclick="{onClickDetail}"><img riot-src="{shareContents.thumbnailUrl}" alt="{shareContents.title}"></a></dt><dd><h1><a href="/content/{shareContents.shareContentsId}" data-id="{shareContents.shareContentsId}" onclick="{onClickDetail}"> {shareContents.title} </a></h1></dd></dl><dl class="sg-contents-timeline-comment"><dt><i class="fa fa-user fa-2x"></i></dt><dd><p>{tweet.comment}</p><time>{tweet.postedAt}</time></dd></dl><ul class="sg-contents-timeline-btn"><li><a class="sg-contents-timeline-btn-good" onclick="{onPutGood}" __disabled="{!opts.isLogin}" href="#"><i class="fa fa-thumbs-up"></i> {value.good} <span data-id="{tweet.tweetId}"><i class="fa fa-thumbs-up"></i> Good </span></a></li><li><a class="sg-contents-timeline-btn-bad" onclick="{onPutBad}" __disabled="{!opts.isLogin}" href="#"><i class="fa fa-thumbs-down"></i> {value.bad} <span data-id="{tweet.tweetId}"><i class="fa fa-thumbs-down"></i> Bad </span></a></li></ul></section></li></ul>', function(opts) {// ===================================================================================
+riot.tag('swt-timeline', '<ul class="sg-contents-timeline {sg-contents-timeline-detail: isDetail}"><li each="{tweets}"><section><dl class="sg-contents-timeline-share"><dt><a href="/content/{shareContents.shareContentsId}" onclick="{onClickDetail}"><img riot-src="{shareContents.thumbnailUrl}" alt="{shareContents.title}"></a></dt><dd><h1><a href="/content/{shareContents.shareContentsId}" onclick="{onClickDetail}"> {shareContents.title} </a></h1></dd></dl><dl class="sg-contents-timeline-comment"><dt><i class="fa fa-user fa-2x"></i></dt><dd><p>{tweet.comment}</p><time>{tweet.postedAt}</time></dd></dl><ul class="sg-contents-timeline-btn"><li><a class="sg-contents-timeline-btn-good" onclick="{onPutGood}" __disabled="{!opts.isLogin}" href="#"><i class="fa fa-thumbs-up"></i> {value.good} <span data-id="{tweet.tweetId}"><i class="fa fa-thumbs-up"></i> Good </span></a></li><li><a class="sg-contents-timeline-btn-bad" onclick="{onPutBad}" __disabled="{!opts.isLogin}" href="#"><i class="fa fa-thumbs-down"></i> {value.bad} <span data-id="{tweet.tweetId}"><i class="fa fa-thumbs-down"></i> Bad </span></a></li></ul></section></li></ul>', function(opts) {// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
@@ -311,12 +366,20 @@ var opts = opts.opts;
 //                                                                          ==========
 this.isDetail = false;
 this.tweets = [];
-var request = window.superagent;
 // ===================================================================================
 //                                                                               Event
 //                                                                               =====
 this.onClickDetail = function (e) {
     e.preventDefault();
+    var commandLeftIndex = opts.currentKeyCodes.indexOf(91);
+    var commandRightIndex = opts.currentKeyCodes.indexOf(93);
+    if (commandLeftIndex >= 0 || commandRightIndex >= 0) {
+        window.open(e.item.shareContents.url);
+    }
+    var shareContentsId = e.item.shareContents.shareContentsId;
+    opts.obs.trigger("showDetail", shareContentsId);
+    opts.findContentsDetail(shareContentsId);
+    history.pushState(e.item.shareContents.title, null, '/contents/' + shareContentsId);
 };
 this.onPutGood = function (e) {
     e.preventDefault();
@@ -340,6 +403,9 @@ opts.obs.on("hideDetail", function () {
 });
 opts.obs.on("onValueUpdated", function (valueInfo) {
     _this.update();
+});
+opts.obs.on("onPosted", function () {
+    setTimeout(callFindTimeline, 100);
 });
 // ===================================================================================
 //                                                                               Logic
@@ -398,8 +464,10 @@ this.onInputComment = function (e) {
 };
 this.onSubmit = function (e) {
     e.preventDefault();
-    var url = _this.tweetUrl.value.trim();
-    var comment = _this.tweetComment.value.trim();
+    var urlObj = _this.tweetUrl;
+    var commentObj = _this.tweetComment;
+    var url = urlObj.value.trim();
+    var comment = commentObj.value.trim();
     if (url == "") {
         alert("URLを入力してください");
         return;
@@ -416,6 +484,10 @@ this.onSubmit = function (e) {
         ngButtonMsg: "キャンセル",
         ok: function () {
             opts.doPost(url, comment);
+            urlObj.value = "";
+            commentObj.value = "";
+            _this.commentLength = 0;
+            opts.obs.trigger("hideModal");
         },
         ng: function () {
             opts.obs.trigger("hideModal");

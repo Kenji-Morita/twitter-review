@@ -77,6 +77,8 @@
           opts.doPost(url, comment);
           urlObj.value = "";
           commentObj.value = "";
+          this.commentLength = 0;
+          opts.obs.trigger("hideModal");
         },
         ng: () => {
           opts.obs.trigger("hideModal");

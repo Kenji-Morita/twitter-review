@@ -36,8 +36,10 @@ this.onInputComment = function (e) {
 };
 this.onSubmit = function (e) {
     e.preventDefault();
-    var url = _this.tweetUrl.value.trim();
-    var comment = _this.tweetComment.value.trim();
+    var urlObj = _this.tweetUrl;
+    var commentObj = _this.tweetComment;
+    var url = urlObj.value.trim();
+    var comment = commentObj.value.trim();
     if (url == "") {
         alert("URLを入力してください");
         return;
@@ -54,6 +56,10 @@ this.onSubmit = function (e) {
         ngButtonMsg: "キャンセル",
         ok: function () {
             opts.doPost(url, comment);
+            urlObj.value = "";
+            commentObj.value = "";
+            _this.commentLength = 0;
+            opts.obs.trigger("hideModal");
         },
         ng: function () {
             opts.obs.trigger("hideModal");

@@ -17,6 +17,11 @@ class FrontController extends Controller {
        getSessionMemberOpt(request).map(loginMemberOpt => Ok(views.html.index(loginMemberOpt)))
    }
 
+   def contents(shareContentsId: String) = Action.async {
+     implicit request =>
+       getSessionMemberOpt(request).map(loginMemberOpt => Ok(views.html.contents(loginMemberOpt)(shareContentsId)))
+   }
+
    // TODO
    def confirmHash(memberId: String, confirmHash: String) = Action {
      implicit request =>

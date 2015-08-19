@@ -10,6 +10,9 @@
     interface Window {
       superagent: any;
     }
+    interface EventTarget {
+      location: any;
+    }
 
     // ===================================================================================
     //                                                                          Attributes
@@ -18,6 +21,7 @@
     var request = window.superagent;
     this.isLogin = opts.isLogin;
     this.obs = riot.observable();
+    this.currentKeyCodes = [];
 
     // ===================================================================================
     //                                                                               Logic
@@ -106,8 +110,15 @@
     };
 
     this.doPost = (url, comment) => {
-      console.log("a");
-      this.obs.trigger("onPosted");
+      request
+        .post("/api/tweet/tweet")
+        .send({url: url, comment: comment})
+        .set('Accept', 'application/json')
+        .end((error, response) => {
+          if (response.ok) {
+            this.obs.trigger("onPosted");
+          }
+        });
     };
 
     this.putGood = tweetId => {
@@ -131,5 +142,41 @@
           }
         });
     };
+
+    this.findContentsDetail = shareContentsId => {
+      request
+        .get("/api/contents/" + shareContentsId)
+        .end((error, response) => {
+          if (response.ok) {
+            var contents = JSON.parse(response.text).value;
+            this.obs.trigger("onContentsLoaded", contents);
+          }
+        });
+    };
+
+    window.addEventListener("keydown", e => {
+      var keyCode = e.keyCode;
+      var index = this.currentKeyCodes.indexOf(keyCode);
+      if (index < 0) {
+        this.currentKeyCodes.push(keyCode);
+      }
+    });
+
+    window.addEventListener("keyup", e => {
+      var index = this.currentKeyCodes.indexOf(e.keyCode);
+      if (index >= 0) {
+        this.currentKeyCodes.splice(index, 1);
+      }
+    });
+
+    window.addEventListener("popstate", e => {
+      var path = e.target.location.pathname;
+      if (path == "/") {
+        this.obs.trigger("hideDetail");
+      } else {
+        // TODO 進む時の動作
+      }
+    });
+
   </script>
 </swt-common>

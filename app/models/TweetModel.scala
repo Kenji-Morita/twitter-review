@@ -67,8 +67,18 @@ object TweetModel {
     }
   }
 
-  // TODO
-  def findByShareContentsId(shareContentsId: String): Future[Option[Tweet]] = ???
+  def findByShareContentsIds(shareContentsId: String): Future[List[Tweet]] = ElasticsearchUtil.process { client =>
+    client.execute(search in "twitter/tweet" fields "_timestamp" fields "_source" query {
+      filteredQuery filter {
+        andFilter(
+          termFilter("shareContentsId", shareContentsId),
+          termFilter("deleted", false)
+        )
+      }
+    }).map { result =>
+      result.getHits.getHits.toList.map(mapping)
+    }
+  }
 
   // ===================================================================================
   //                                                                                  Do

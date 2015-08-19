@@ -1,4 +1,4 @@
-@(loginMember: Option[Member])
+@(loginMember: Option[Member])(shareContentsId: String)
 
 <!DOCTYPE html>
 <html>
@@ -26,6 +26,8 @@
     riot.mount("swt-contents", common);
     riot.mount("swt-tweet", common);
     riot.mount("swt-footer", common);
+    common.obs.trigger("showDetail", "@{shareContentsId}");
+    common.findContentsDetail("@{shareContentsId}");
 </script>
 </body>
 </html>

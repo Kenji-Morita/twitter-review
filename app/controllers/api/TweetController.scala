@@ -21,16 +21,6 @@ case class PostedTweet(url: String, comment: String)
  */
 class TweetController extends Controller {
 
-  def detail(shareContentsId: String) = Action.async {
-    implicit request =>
-      TweetModel.findByShareContentsId(shareContentsId).flatMap { tweetOpt =>
-        tweetOpt match {
-          case tweet if tweet.isEmpty || tweet.get.deleted => Future.successful(NotFound(createJson(TweetNotFound)))
-          case Some(t) => Future.successful(Ok(createJson(NoReason, t.toJson)))
-        }
-      }
-  }
-
   def tweet = AuthAction.async(parse.json) {
     implicit request =>
       implicit val tweetReads: Reads[PostedTweet] = (

@@ -70,6 +70,11 @@ html, body {
   color: $color-text;
 }
 
+h1 {
+  margin: 0;
+  font-size: $font-size-large;
+}
+
 ul {
   list-style-type: none;
   margin: 0;
@@ -105,8 +110,6 @@ p {
     float: left;
 
     & h1 {
-      margin: 0;
-      font-size: $font-size-large;
 
       & a {
         color: $color-text-white;
@@ -190,6 +193,7 @@ p {
       display: table-cell;
       width: 50%;
       height: 100%;
+      vertical-align: top;
     }
   }
 
@@ -263,8 +267,6 @@ p {
     }
 
     & h1 {
-      margin: 0;
-      font-size: $font-size-large;
       position: absolute;
       left: $margin-small;
       top: 6px;
@@ -282,74 +284,74 @@ p {
         }
       }
     }
+  }
 
-    & .sg-contents-timeline-comment {
+  & .sg-contents-timeline-comment {
 
-      & dt {
-        width: $icon-size + $margin-small * 2;
-        position: relative;
-        top: $margin-small;
-      }
-
-      & time {
-        font-size: $font-size-small;
-        display: block;
-        text-align: right;
-        margin: $margin-small 0;
-      }
+    & dt {
+      width: $icon-size + $margin-small * 2;
+      position: relative;
+      top: $margin-small;
     }
 
-    & .sg-contents-timeline-btn {
-      display: table;
-      table-layout: fixed;
-      width: 100%;
-      text-align: center;
-      margin-top: $margin-small;
+    & time {
+      font-size: $font-size-small;
+      display: block;
+      text-align: right;
+      margin: $margin-small 0;
+    }
+  }
 
-      & li {
-        display: table-cell;
-      }
+  & .sg-contents-timeline-btn {
+    display: table;
+    table-layout: fixed;
+    width: 100%;
+    text-align: center;
+    margin-top: $margin-small;
 
-      & a {
-        display: block;
+    & li {
+      display: table-cell;
+    }
+
+    & a {
+      display: block;
+      width: 80px;
+      position: relative;
+      padding: $margin-small;
+      border-radius: $round-param;
+      color: $color-white;
+      text-decoration: none;
+      margin: 0 auto;
+
+      & span {
+        position: absolute;
+        top: 0;
+        left: 0;
         width: 80px;
-        position: relative;
         padding: $margin-small;
         border-radius: $round-param;
-        color: $color-white;
-        text-decoration: none;
-        margin: 0 auto;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+
+      &.sg-contents-timeline-btn-good {
+        background-color: $color-good;
 
         & span {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 80px;
-          padding: $margin-small;
-          border-radius: $round-param;
-          opacity: 0;
-          transition: opacity 0.2s ease;
+          background-color: $color-good-hover;
         }
+      }
 
-        &.sg-contents-timeline-btn-good {
-          background-color: $color-good;
+      &.sg-contents-timeline-btn-bad {
+        background-color: $color-bad;
 
-          & span {
-            background-color: $color-good-hover;
-          }
+        & span {
+          background-color: $color-bad-hover;
         }
+      }
 
-        &.sg-contents-timeline-btn-bad {
-          background-color: $color-bad;
-
-          & span {
-            background-color: $color-bad-hover;
-          }
-        }
-
-        &:hover span {
-          opacity: 1;
-        }
+      &:hover span {
+        opacity: 1;
       }
     }
   }
@@ -359,6 +361,22 @@ p {
     width: calc(100% - 20px);
     margin: 0;
     border-radius: 0;
+
+    & header {
+
+      a {
+        color: $color-text;
+        text-decoration: none;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+
+      p {
+        text-align: right;
+      }
+    }
   }
 
   & .sg-contents-iframe {
@@ -398,8 +416,6 @@ p {
         margin-bottom: $margin-small;
 
         & h1 {
-          margin: 0;
-          font-size: $font-size-large;
           text-align: center;
         }
       }

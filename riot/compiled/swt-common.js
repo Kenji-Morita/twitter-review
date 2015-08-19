@@ -8,6 +8,7 @@ var _this = this;
 var request = window.superagent;
 this.isLogin = opts.isLogin;
 this.obs = riot.observable();
+this.currentKeyCodes = [];
 // ===================================================================================
 //                                                                               Logic
 //                                                                               =====
@@ -86,8 +87,15 @@ this.findTimeline = function (before, after) {
     });
 };
 this.doPost = function (url, comment) {
-    console.log("a");
-    _this.obs.trigger("onPosted");
+    request
+        .post("/api/tweet/tweet")
+        .send({ url: url, comment: comment })
+        .set('Accept', 'application/json')
+        .end(function (error, response) {
+        if (response.ok) {
+            _this.obs.trigger("onPosted");
+        }
+    });
 };
 this.putGood = function (tweetId) {
     request
@@ -109,5 +117,36 @@ this.putBad = function (tweetId) {
         }
     });
 };
+this.findContentsDetail = function (shareContentsId) {
+    request
+        .get("/api/contents/" + shareContentsId)
+        .end(function (error, response) {
+        if (response.ok) {
+            var contents = JSON.parse(response.text).value;
+            _this.obs.trigger("onContentsLoaded", contents);
+        }
+    });
+};
+window.addEventListener("keydown", function (e) {
+    var keyCode = e.keyCode;
+    var index = _this.currentKeyCodes.indexOf(keyCode);
+    if (index < 0) {
+        _this.currentKeyCodes.push(keyCode);
+    }
+});
+window.addEventListener("keyup", function (e) {
+    var index = _this.currentKeyCodes.indexOf(e.keyCode);
+    if (index >= 0) {
+        _this.currentKeyCodes.splice(index, 1);
+    }
+});
+window.addEventListener("popstate", function (e) {
+    var path = e.target.location.pathname;
+    if (path == "/") {
+        _this.obs.trigger("hideDetail");
+    }
+    else {
+    }
+});
 
 });

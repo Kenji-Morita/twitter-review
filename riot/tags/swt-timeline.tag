@@ -4,13 +4,13 @@
       <section>
         <dl class="sg-contents-timeline-share">
           <dt>
-            <a href="/content/{shareContents.shareContentsId}" data-id={shareContents.shareContentsId} onclick={onClickDetail}>
+            <a href="/content/{shareContents.shareContentsId}" onclick={onClickDetail}>
               <img src={shareContents.thumbnailUrl} alt={shareContents.title}>
             </a>
           </dt>
           <dd>
             <h1>
-              <a href="/content/{shareContents.shareContentsId}" data-id={shareContents.shareContentsId} onclick={onClickDetail}>
+              <a href="/content/{shareContents.shareContentsId}" onclick={onClickDetail}>
                 {shareContents.title}
               </a>
             </h1>
@@ -52,12 +52,8 @@
     //                                                                             Declare
     //                                                                             =======
 
-    declare var riot: any;
     declare var opts: any;
     var opts = opts.opts;
-    interface Window {
-      superagent: any;
-    }
 
     // ===================================================================================
     //                                                                          Attributes
@@ -65,7 +61,6 @@
 
     this.isDetail = false;
     this.tweets = [];
-    var request = window.superagent;
 
     // ===================================================================================
     //                                                                               Event
@@ -73,6 +68,15 @@
 
     this.onClickDetail = e => {
       e.preventDefault();
+      var commandLeftIndex = opts.currentKeyCodes.indexOf(91);
+      var commandRightIndex = opts.currentKeyCodes.indexOf(93);
+      if (commandLeftIndex >= 0 || commandRightIndex >= 0) {
+        window.open(e.item.shareContents.url);
+      }
+      var shareContentsId = e.item.shareContents.shareContentsId;
+      opts.obs.trigger("showDetail", shareContentsId);
+      opts.findContentsDetail(shareContentsId);
+      history.pushState(e.item.shareContents.title, null, '/contents/' + shareContentsId);
     }
 
     this.onPutGood = e => {
@@ -102,6 +106,10 @@
 
     opts.obs.on("onValueUpdated", valueInfo => {
       this.update();
+    });
+
+    opts.obs.on("onPosted", () => {
+      setTimeout(callFindTimeline, 100);
     });
 
     // ===================================================================================

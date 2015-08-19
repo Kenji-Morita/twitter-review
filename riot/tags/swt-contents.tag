@@ -4,7 +4,7 @@
     <swt-tweet if={!isDetail && opts.isLogin}></swt-tweet>
     <swt-timeline if={!isDetail} opts={opts}></swt-timeline>
     <swt-detail if={isDetail} opts={opts}></swt-detail>
-    <swt-iframe if={isDetail}></swt-iframe>
+    <swt-iframe if={isDetail} opts={opts}></swt-iframe>
     <swt-modal if={isShowModal} opts={opts}></swt-modal>
   </div>
 

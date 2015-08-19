@@ -13,6 +13,28 @@ import utils.ElasticsearchUtil
 
 import scala.util.matching.Regex
 
+case class ShareContentsDetail(shareContents: ShareContents, tweets: List[Tweet]) {
+
+  def toJson: Future[JsValue] = {
+    val inner = tweets.map { tweet =>
+      ValueModel.countValueByTweet(tweet).map { valueCount =>
+        Map(
+          "tweet" -> tweet.toJson,
+          "value" -> valueCount.toJson
+        )
+      }
+    }
+    Future.traverse(inner) { m =>
+      m.map(Json.toJson(_))
+    }.map { list =>
+      Json.toJson(Map(
+        "shareContents" -> shareContents.toJson,
+        "tweets" -> Json.toJson(list)
+      ))
+    }
+  }
+}
+
 case class ShareContents(shareContentsId: String, url: String, title: String, thumbnailUrl: String) {
 
   def toJson: JsValue = Json.toJson(this)(Json.writes[ShareContents])
