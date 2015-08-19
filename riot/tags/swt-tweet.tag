@@ -1,16 +1,22 @@
 <swt-tweet>
   <div class="sg-contents-tweet">
     <form onsubmit={onSubmit}>
-      <input type="text" name="tweet-url" oninput={onInputUrl} placeholder="気になったWEBページのアドレスを入力">
-      <textarea name="tweet-comment" if={isStartDisplayComment} oninput={onInputComment} class={sg-contents-tweet-comment-show: isDisplayComment} placeholder="コメントを入力"></textarea>
+      <input type="text" name="tweetUrl" oninput={onInputUrl} placeholder="気になったWEBページのアドレスを入力">
+      <textarea name="tweetComment" if={isStartDisplayComment} oninput={onInputComment} class={sg-contents-tweet-comment-show: isDisplayComment} placeholder="コメントを入力"></textarea>
       <div class="sg-contents-tweet-submit">
         <span class={sg-contents-tweet-submit-invalid: commentLength > 140}>{commentLength}</span>
-        <button>投稿</button>
+        <button disabled={!isDisplayComment || commentLength <= 0 || commentLength > 140}>投稿</button>
       </div>
     </form>
   </div>
 
   <script>
+    // ===================================================================================
+    //                                                                             Declare
+    //                                                                             =======
+
+    declare var opts: any;
+
     // ===================================================================================
     //                                                                          Attributes
     //                                                                          ==========
@@ -49,6 +55,33 @@
 
     this.onSubmit = e => {
       e.preventDefault();
+      var urlObj = this.tweetUrl;
+      var commentObj = this.tweetComment;
+      var url = urlObj.value.trim();
+      var comment = commentObj.value.trim();
+      if (url == "") {
+        alert("URLを入力してください");
+        return;
+      }
+      if (comment == "") {
+        alert("コメントを入力してください");
+        return;
+      }
+      opts.obs.trigger("showModal", {
+        title: "投稿確認",
+        msg: comment,
+        msgSub: "WEBページ(" + url + ")について、このコメントを投稿してもよろしいでしょうか？",
+        okButtonMsg: "投稿",
+        ngButtonMsg: "キャンセル",
+        ok: () => {
+          opts.doPost(url, comment);
+          urlObj.value = "";
+          commentObj.value = "";
+        },
+        ng: () => {
+          opts.obs.trigger("hideModal");
+        }
+      });
     }
   </script>
 </swt-tweet>

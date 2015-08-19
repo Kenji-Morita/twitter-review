@@ -85,6 +85,10 @@ this.findTimeline = function (before, after) {
         }
     });
 };
+this.doPost = function (url, comment) {
+    console.log("a");
+    _this.obs.trigger("onPosted");
+};
 this.putGood = function (tweetId) {
     request
         .put("/api/value/good/" + tweetId)

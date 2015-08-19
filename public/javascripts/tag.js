@@ -85,6 +85,10 @@ this.findTimeline = function (before, after) {
         }
     });
 };
+this.doPost = function (url, comment) {
+    console.log("a");
+    _this.obs.trigger("onPosted");
+};
 this.putGood = function (tweetId) {
     request
         .put("/api/value/good/" + tweetId)
@@ -108,7 +112,7 @@ this.putBad = function (tweetId) {
 
 });
 
-riot.tag('swt-contents', '<div class="sg-contents {sg-contents-separate: isDetail}"><swt-tweet if="{!isDetail && opts.isLogin}"></swt-tweet><swt-timeline if="{!isDetail}" opts="{opts}"></swt-timeline><swt-detail if="{isDetail}" opts="{opts}"></swt-detail><swt-iframe if="{isDetail}"></swt-iframe><swt-modal if="{isShowModal}" opts="{opts}"></swt-modal></div>', function(opts) {// ===================================================================================
+riot.tag('swt-contents', '<div class="sg-contents {sg-contents-separate: isDetail}"><swt-cover if="{!isDetail && !opts.isLogin}"></swt-cover><swt-tweet if="{!isDetail && opts.isLogin}"></swt-tweet><swt-timeline if="{!isDetail}" opts="{opts}"></swt-timeline><swt-detail if="{isDetail}" opts="{opts}"></swt-detail><swt-iframe if="{isDetail}"></swt-iframe><swt-modal if="{isShowModal}" opts="{opts}"></swt-modal></div>', function(opts) {// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
@@ -141,13 +145,16 @@ opts.obs.on("hideModal", function () {
 
 });
 
+riot.tag('swt-cover', '<div class="sg-contents-cover"><ul></ul></div>', function(opts) {
+});
+
 riot.tag('swt-detail', '<div class="sg-contents-detail"></div>', function(opts) {
 });
 
 riot.tag('swt-footer', '<footer class="sg-footer"><div class="sg-container"><p>(c)2015 SAW</p></div></footer>', function(opts) {
 });
 
-riot.tag('swt-header', '<header class="sg-header"><ul><li class="sg-header-logo"><h1>Sawitter</h1></li><li if="{isLogin}" class="sg-header-tweet"><a href="#" onclick="{tweetNews}"><i class="fa fa-pencil-square-o"></i></a></li><li class="sg-header-signs"><ul><li if="{!isLogin}" onclick="{onSignin}" class="sg-header-signin"><button>サインイン</button></li><li if="{!isLogin}" onclick="{onSignup}" class="sg-header-signup"><button>登録</button></li><li if="{isLogin}" onclick="{onSignout}" class="sg-header-signout"><button>サインアウト</button></li></ul></li></ul></header><form name="signin" class="sg-header-signs-signin" if="{false}"><label>メールアドレス</label><input type="text" name="signinMail" placeholder="メールアドレスを入力してください"><label>パスワード</label><input type="password" name="signinPassword" placeholder="パスワードを入力してください"></form><form name="signup" class="sg-header-signs-signup" if="{false}"><label>メールアドレス</label><input type="text" name="signupMail" placeholder="メールアドレスを入力してください"><label>パスワード</label><input type="password" name="signupPassword" placeholder="パスワードを入力してください"><label>パスワード(再確認)</label><input type="password" name="signupPasswordConfirm" placeholder="パスワードを再度入力してください"></form>', function(opts) {// ===================================================================================
+riot.tag('swt-header', '<header class="sg-header"><ul><li class="sg-header-logo"><h1><a href="/">Sawitter</a></h1></li><li if="{isLogin}" class="sg-header-tweet"><a href="#" onclick="{tweetNews}"><i class="fa fa-pencil-square-o"></i></a></li><li class="sg-header-signs"><ul><li if="{!isLogin}" onclick="{onSignin}" class="sg-header-signin"><button>サインイン</button></li><li if="{!isLogin}" onclick="{onSignup}" class="sg-header-signup"><button>登録</button></li><li if="{isLogin}" onclick="{onSignout}" class="sg-header-signout"><button>サインアウト</button></li></ul></li></ul></header><form name="signin" class="sg-header-signs-signin" if="{false}"><label>メールアドレス</label><input type="text" name="signinMail" placeholder="メールアドレスを入力してください"><label>パスワード</label><input type="password" name="signinPassword" placeholder="パスワードを入力してください"></form><form name="signup" class="sg-header-signs-signup" if="{false}"><label>メールアドレス</label><input type="text" name="signupMail" placeholder="メールアドレスを入力してください"><label>パスワード</label><input type="password" name="signupPassword" placeholder="パスワードを入力してください"><label>パスワード(再確認)</label><input type="password" name="signupPasswordConfirm" placeholder="パスワードを再度入力してください"></form>', function(opts) {// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
@@ -241,7 +248,7 @@ this.onSignout = function (e) {
 riot.tag('swt-iframe', '<iframe class="sg-contents-iframe"></iframe>', function(opts) {
 });
 
-riot.tag('swt-modal', '<div class="sg-contents-modal"><div class="{sg-contents-modal-bg: isShowModal}" onclick="{closeModal}"></div><div if="{isShowModal}" class="sg-contents-modal-contents"><section><header class="sg-contents-modal-contents-header"><h1>{contents.title}</h1></header><div name="raw" class="sg-contents-modal-contents-msg"></div><footer class="sg-contents-modal-contents-footer"><ul><li><button onclick="{onOk}">{contents.okButtonMsg}</button></li><li><button onclick="{onNg}">{contents.ngButtonMsg}</button></li></ul></footer></section></div></div>', function(opts) {// ===================================================================================
+riot.tag('swt-modal', '<div class="sg-contents-modal"><div class="{sg-contents-modal-bg: isShowModal}" onclick="{closeModal}"></div><div if="{isShowModal}" class="sg-contents-modal-contents"><section><header class="sg-contents-modal-contents-header"><h1>{contents.title}</h1></header><div if="{contents.raw != null}" name="raw" class="sg-contents-modal-contents-raw"></div><div if="{contents.msg != null}">{contents.msg}</div><div if="{contents.msgSub != null}" class="sg-contents-modal-contents-msg-sub">{contents.msgSub}</div><footer class="sg-contents-modal-contents-footer"><ul><li><button onclick="{onOk}">{contents.okButtonMsg}</button></li><li><button onclick="{onNg}">{contents.ngButtonMsg}</button></li></ul></footer></section></div></div>', function(opts) {// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
@@ -353,10 +360,13 @@ looper();
 
 });
 
-riot.tag('swt-tweet', '<div class="sg-contents-tweet"><form onsubmit="{onSubmit}"><input type="text" name="tweet-url" oninput="{onInputUrl}" placeholder="気になったWEBページのアドレスを入力"><textarea name="tweet-comment" if="{isStartDisplayComment}" oninput="{onInputComment}" class="{sg-contents-tweet-comment-show: isDisplayComment}" placeholder="コメントを入力"></textarea><div class="sg-contents-tweet-submit"><span class="{sg-contents-tweet-submit-invalid: commentLength > 140}">{commentLength}</span><button>投稿</button></div></form></div>', function(opts) {// ===================================================================================
+riot.tag('swt-tweet', '<div class="sg-contents-tweet"><form onsubmit="{onSubmit}"><input type="text" name="tweetUrl" oninput="{onInputUrl}" placeholder="気になったWEBページのアドレスを入力"><textarea name="tweetComment" if="{isStartDisplayComment}" oninput="{onInputComment}" class="{sg-contents-tweet-comment-show: isDisplayComment}" placeholder="コメントを入力"></textarea><div class="sg-contents-tweet-submit"><span class="{sg-contents-tweet-submit-invalid: commentLength > 140}">{commentLength}</span><button __disabled="{!isDisplayComment || commentLength <= 0 || commentLength > 140}">投稿</button></div></form></div>', function(opts) {// ===================================================================================
+//                                                                             Declare
+//                                                                             =======
+var _this = this;
+// ===================================================================================
 //                                                                          Attributes
 //                                                                          ==========
-var _this = this;
 this.isStartDisplayComment = false;
 this.isDisplayComment = false;
 this.commentLength = 0;
@@ -388,6 +398,29 @@ this.onInputComment = function (e) {
 };
 this.onSubmit = function (e) {
     e.preventDefault();
+    var url = _this.tweetUrl.value.trim();
+    var comment = _this.tweetComment.value.trim();
+    if (url == "") {
+        alert("URLを入力してください");
+        return;
+    }
+    if (comment == "") {
+        alert("コメントを入力してください");
+        return;
+    }
+    opts.obs.trigger("showModal", {
+        title: "投稿確認",
+        msg: comment,
+        msgSub: "WEBページ(" + url + ")について、このコメントを投稿してもよろしいでしょうか？",
+        okButtonMsg: "投稿",
+        ngButtonMsg: "キャンセル",
+        ok: function () {
+            opts.doPost(url, comment);
+        },
+        ng: function () {
+            opts.obs.trigger("hideModal");
+        }
+    });
 };
 
 });

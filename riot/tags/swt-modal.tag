@@ -7,8 +7,9 @@
         <header class="sg-contents-modal-contents-header">
           <h1>{contents.title}</h1>
         </header>
-        <div name="raw" class="sg-contents-modal-contents-msg">
-        </div>
+        <div if={contents.raw != null} name="raw" class="sg-contents-modal-contents-raw"></div>
+        <div if={contents.msg != null}>{contents.msg}</div>
+        <div if={contents.msgSub != null} class="sg-contents-modal-contents-msg-sub">{contents.msgSub}</div>
         <footer class="sg-contents-modal-contents-footer">
           <ul>
             <li>

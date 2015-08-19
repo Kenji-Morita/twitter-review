@@ -32,8 +32,10 @@ p {
     float: left; }
     .sg-header .sg-header-logo h1 {
       margin: 0;
-      font-size: 18px;
-      color: #efefef; }
+      font-size: 18px; }
+      .sg-header .sg-header-logo h1 a {
+        color: #efefef;
+        text-decoration: none; }
   .sg-header .sg-header-tweet {
     position: absolute;
     left: calc(50% - 32px);
@@ -64,12 +66,12 @@ p {
         vertical-align: center;
         text-align: center; }
 
-.sg-contents-modal-contents-msg {
-  padding: 0 10px 0 5px; }
-  .sg-contents-modal-contents-msg label, .sg-contents-modal-contents-msg input {
-    display: block;
-    width: 100%;
-    margin-bottom: 10px; }
+.sg-contents-cover {
+  height: 400px;
+  width: 100%;
+  background-color: #999;
+  margin-top: -11px;
+  margin-bottom: 50px; }
 
 .sg-contents {
   width: 100%;
@@ -241,9 +243,18 @@ p {
         margin: 0;
         font-size: 18px;
         text-align: center; }
-    .sg-contents .sg-contents-modal .sg-contents-modal-contents .sg-contents-modal-contents-msg {
+    .sg-contents .sg-contents-modal .sg-contents-modal-contents .sg-contents-modal-contents-raw {
       max-height: 300px;
-      overflow: scroll; }
+      overflow: scroll;
+      padding: 0 10px 0 5px; }
+      .sg-contents .sg-contents-modal .sg-contents-modal-contents .sg-contents-modal-contents-raw label, .sg-contents .sg-contents-modal .sg-contents-modal-contents .sg-contents-modal-contents-raw input {
+        display: block;
+        width: 100%;
+        margin-bottom: 10px; }
+    .sg-contents .sg-contents-modal .sg-contents-modal-contents .sg-contents-modal-contents-msg-sub {
+      border-top: 1px solid #ccc;
+      margin-top: 10px;
+      padding-top: 10px; }
     .sg-contents .sg-contents-modal .sg-contents-modal-contents .sg-contents-modal-contents-footer ul {
       display: table;
       table-layout: fixed;

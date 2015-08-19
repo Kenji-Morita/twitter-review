@@ -1,5 +1,6 @@
 <swt-contents>
   <div class="sg-contents {sg-contents-separate: isDetail}">
+    <swt-cover if={!isDetail && !opts.isLogin}></swt-cover>
     <swt-tweet if={!isDetail && opts.isLogin}></swt-tweet>
     <swt-timeline if={!isDetail} opts={opts}></swt-timeline>
     <swt-detail if={isDetail} opts={opts}></swt-detail>
@@ -12,7 +13,6 @@
     //                                                                             Declare
     //                                                                             =======
 
-    declare var riot: any;
     declare var opts: any;
 
     // ===================================================================================

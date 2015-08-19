@@ -1,7 +1,11 @@
 <swt-header>
   <header class="sg-header">
     <ul>
-      <li class="sg-header-logo"><h1>Sawitter</h1></li>
+      <li class="sg-header-logo">
+        <h1>
+          <a href="/">Sawitter</a>
+        </h1>
+      </li>
       <li if={isLogin} class="sg-header-tweet">
         <a href="#" onclick={tweetNews}>
           <i class="fa fa-pencil-square-o"></i>
@@ -69,8 +73,6 @@
       };
       scrollToTop();
     };
-
-
 
     this.onSignin = e => {
       e.preventDefault();

@@ -107,7 +107,11 @@ p {
     & h1 {
       margin: 0;
       font-size: $font-size-large;
-      color: $color-text-white;
+
+      & a {
+        color: $color-text-white;
+        text-decoration: none;
+      }
     }
   }
 
@@ -162,15 +166,12 @@ p {
 //                                                                            Contents
 //                                                                            ========
 
-.sg-contents-modal-contents-msg {
-
-  padding: 0 $margin-small 0 $margin-micro;
-
-  & label, & input {
-    display: block;
-    width: 100%;
-    margin-bottom: $margin-small;
-  }
+.sg-contents-cover {
+  height: 400px;
+  width: 100%;
+  background-color: $color-main;
+  margin-top: -11px;
+  margin-bottom: $margin-middle;
 }
 
 .sg-contents {
@@ -403,9 +404,22 @@ p {
         }
       }
 
-      & .sg-contents-modal-contents-msg {
+      & .sg-contents-modal-contents-raw {
         max-height: 300px;
         overflow: scroll;
+        padding: 0 $margin-small 0 $margin-micro;
+
+        & label, & input {
+          display: block;
+          width: 100%;
+          margin-bottom: $margin-small;
+        }
+      }
+
+      & .sg-contents-modal-contents-msg-sub {
+        border-top: $border-common;
+        margin-top: $margin-small;
+        padding-top: $margin-small;
       }
 
       & .sg-contents-modal-contents-footer {

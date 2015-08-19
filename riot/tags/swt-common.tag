@@ -105,6 +105,11 @@
         });
     };
 
+    this.doPost = (url, comment) => {
+      console.log("a");
+      this.obs.trigger("onPosted");
+    };
+
     this.putGood = tweetId => {
       request
         .put("/api/value/good/" + tweetId)
