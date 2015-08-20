@@ -15,8 +15,7 @@
     //                                                                             Declare
     //                                                                             =======
 
-    declare var opts: any;
-    var opts = opts.opts.opts;
+    declare var sawitter: any;
 
     // ===================================================================================
     //                                                                          Attributes
@@ -47,21 +46,21 @@
         alert("コメントを入力してください");
         return;
       }
-      opts.obs.trigger("showModal", {
+      sawitter.obs.trigger("showModal", {
         title: "投稿確認",
         msg: comment,
         msgSub: "WEBページ(" + url + ")について、このコメントを投稿してもよろしいでしょうか？",
         okButtonMsg: "投稿",
         ngButtonMsg: "キャンセル",
         ok: () => {
-          opts.doPost(url, comment);
+          sawitter.doPost(url, comment);
           urlObj.value = "";
           commentObj.value = "";
           this.commentLength = 0;
-          opts.obs.trigger("hideModal");
+          sawitter.obs.trigger("hideModal");
         },
         ng: () => {
-          opts.obs.trigger("hideModal");
+          sawitter.obs.trigger("hideModal");
         }
       });
     }

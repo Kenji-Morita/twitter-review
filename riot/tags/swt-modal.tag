@@ -29,8 +29,7 @@
     //                                                                             Declare
     //                                                                             =======
 
-    declare var opts: any;
-    var opts = opts.opts;
+    declare var sawitter: any;
 
     // ===================================================================================
     //                                                                          Attributes
@@ -45,7 +44,7 @@
 
     this.closeModal = e => {
       e.preventDefault();
-      opts.obs.trigger("hideModal");
+      sawitter.obs.trigger("hideModal");
     };
 
     this.onOk = e => {
@@ -58,7 +57,7 @@
       this.contents.ng(this.raw);
     }
 
-    opts.obs.on("showModal", contents => {
+    sawitter.obs.on("showModal", contents => {
       this.contents = contents;
       this.raw.innerHTML = contents.raw;
       setTimeout(() => {
@@ -67,7 +66,7 @@
       }, 1);
     });
 
-    opts.obs.on("hideModal", () => {
+    sawitter.obs.on("hideModal", () => {
       this.contents = {};
       this.raw.innerHTML = "";
       this.isShowModal = false;

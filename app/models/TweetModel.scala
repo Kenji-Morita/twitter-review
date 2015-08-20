@@ -4,6 +4,8 @@ import java.time.format.DateTimeFormatter
 import java.time.{ZoneOffset, LocalDateTime}
 import java.util
 
+import org.elasticsearch.search.sort.SortOrder
+
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -75,7 +77,9 @@ object TweetModel {
           termFilter("deleted", false)
         )
       }
-    }).map { result =>
+    } sort (
+      by field "_timestamp" order SortOrder.DESC
+    )).map { result =>
       result.getHits.getHits.toList.map(mapping)
     }
   }

@@ -14,7 +14,7 @@
     <script src="/assets/javascripts/sha.js"></script>
     <script src="/assets/javascripts/identicon.js"></script>
     <script src="/assets/javascripts/riot.min.js"></script>
-    <script src="/assets/javascripts/tag.min.js"></script>
+    <script src="/assets/javascripts/tag.js"></script>
 </head>
 <body>
 
@@ -24,11 +24,10 @@
 <swt-footer></swt-footer>
 
 <script>
-    var common = riot.mount("swt-common", {isLogin: @{loginMember.nonEmpty}})[0];
-    riot.mount("swt-header", common);
-    riot.mount("swt-contents", common);
-    riot.mount("swt-tweet", common);
-    riot.mount("swt-footer", common);
+    riot.mount("swt-common", {isLogin: @{loginMember.nonEmpty}})[0];
+    riot.mount("swt-header");
+    riot.mount("swt-contents");
+    riot.mount("swt-footer");
 </script>
 </body>
 </html>

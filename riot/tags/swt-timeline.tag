@@ -25,24 +25,7 @@
             <time>{tweet.postedAt}</time>
           </dd>
         </dl>
-        <ul class="sg-contents-timeline-btn">
-          <li>
-            <a class="sg-contents-timeline-btn-good" onclick={onPutGood} disabled={!opts.isLogin} href="#">
-              <i class="fa fa-thumbs-up"></i> {value.good}
-              <span data-id={tweet.tweetId}>
-                <i class="fa fa-thumbs-up"></i> Good
-              </span>
-            </a>
-          </li>
-          <li>
-            <a class="sg-contents-timeline-btn-bad" onclick={onPutBad} disabled={!opts.isLogin} href="#">
-              <i class="fa fa-thumbs-down"></i> {value.bad}
-              <span data-id={tweet.tweetId}>
-                <i class="fa fa-thumbs-down"></i> Bad
-              </span>
-            </a>
-          </li>
-        </ul>
+        <swt-value-btns value={value} tweetid={tweet.tweetId}></swt-value-btns>
       </section>
     </li>
   </ul>
@@ -52,8 +35,7 @@
     //                                                                             Declare
     //                                                                             =======
 
-    declare var opts: any;
-    var opts = opts.opts;
+    declare var sawitter: any;
 
     // ===================================================================================
     //                                                                          Attributes
@@ -68,45 +50,35 @@
 
     this.onClickDetail = e => {
       e.preventDefault();
-      var commandLeftIndex = opts.currentKeyCodes.indexOf(91);
-      var commandRightIndex = opts.currentKeyCodes.indexOf(93);
+      var commandLeftIndex = sawitter.currentKeyCodes.indexOf(91);
+      var commandRightIndex = sawitter.currentKeyCodes.indexOf(93);
       if (commandLeftIndex >= 0 || commandRightIndex >= 0) {
         window.open(e.item.shareContents.url);
       }
       var shareContentsId = e.item.shareContents.shareContentsId;
-      opts.showDetail(shareContentsId);
+      sawitter.showDetail(shareContentsId);
     }
 
-    this.onPutGood = e => {
-      e.preventDefault();
-      opts.putGood(e.target.getAttribute("data-id"));
-    }
-
-    this.onPutBad = e => {
-      e.preventDefault();
-      opts.putBad(e.target.getAttribute("data-id"));
-    }
-
-    opts.obs.on("onLoadTimeline", timeline => {
+    sawitter.obs.on("onLoadTimeline", timeline => {
       this.tweets = timeline;
       this.update();
     });
 
-    opts.obs.on("showDetail", () => {
+    sawitter.obs.on("showDetail", () => {
       this.isDetail = true;
       this.update();
     });
 
-    opts.obs.on("hideDetail", () => {
+    sawitter.obs.on("hideDetail", () => {
       this.isDetail = false;
       this.update();
     });
 
-    opts.obs.on("onValueUpdated", valueInfo => {
+    sawitter.obs.on("onValueUpdated", valueInfo => {
       this.update();
     });
 
-    opts.obs.on("onPosted", () => {
+    sawitter.obs.on("onPosted", () => {
       setTimeout(callFindTimeline, 100);
     });
 
@@ -116,9 +88,9 @@
 
     var callFindTimeline = () => {
       if (this.tweets.length > 0) {
-        opts.findTimeline(null, this.tweets[0].timestamp);
+        sawitter.findTimeline(null, this.tweets[0].timestamp);
       } else {
-        opts.findTimeline();
+        sawitter.findTimeline();
       }
     };
 

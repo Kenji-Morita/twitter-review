@@ -5,6 +5,7 @@ var _this = this;
 // ===================================================================================
 //                                                                          Attributes
 //                                                                          ==========
+window.sawitter = this;
 var request = window.superagent;
 this.isLogin = opts.isLogin;
 this.obs = riot.observable();
@@ -26,6 +27,10 @@ this.doSignUp = function (mail, password, passwordConfirm) {
         if (response.ok) {
             location.reload();
         }
+        else {
+            var result = JSON.parse(response.text);
+            console.log(result.reason);
+        }
     });
 };
 this.doSignIn = function (mail, password) {
@@ -42,6 +47,10 @@ this.doSignIn = function (mail, password) {
         .end(function (error, response) {
         if (response.ok) {
             location.reload();
+        }
+        else {
+            var result = JSON.parse(response.text);
+            console.log(result.reason);
         }
     });
 };
@@ -133,12 +142,11 @@ this.showDetail = function (shareContentsId) {
     history.pushState(null, null, '/contents/' + shareContentsId);
 };
 this.generateIcon = function (input) {
-    var salt = 0;
     var rounds = 1;
     var size = 32;
     var outputType = "HEX";
     var hashType = "SHA-512";
-    var shaObj = new jsSHA(input + salt, "TEXT");
+    var shaObj = new jsSHA(input, "TEXT");
     var hash = shaObj.getHash(hashType, outputType, rounds);
     return new Identicon(hash, 32).toString();
 };

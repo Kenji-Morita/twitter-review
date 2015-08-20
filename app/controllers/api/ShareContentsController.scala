@@ -1,5 +1,6 @@
 package controllers.api
 
+import actions.AuthAction._
 import models.{ShareContentsDetail, TweetModel, ShareContentsModel}
 import play.api.mvc.{Action, Controller}
 import utils.JsonUtil._
@@ -14,9 +15,11 @@ class ShareContentsController extends Controller {
   def detail(shareContentsId: String) = Action.async {
     implicit request =>
       ShareContentsModel.findById(shareContentsId).flatMap { shareContents =>
-        TweetModel.findByShareContentsIds(shareContentsId).flatMap { tweetIds =>
-          ShareContentsDetail(shareContents, tweetIds).toJson.map { json =>
-            Ok(createJson(NoReason, json))
+        getSessionMemberOpt(request).flatMap { loginMemberOpt =>
+          TweetModel.findByShareContentsIds(shareContentsId).flatMap { tweetIds =>
+            ShareContentsDetail(shareContents, tweetIds, loginMemberOpt).toJson.map { json =>
+              Ok(createJson(NoReason, json))
+            }
           }
         }
       }

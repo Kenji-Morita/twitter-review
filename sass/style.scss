@@ -286,6 +286,17 @@ p {
     }
   }
 
+  & .sg-contents-timeline-sort {
+    display: table;
+    table-layout: fixed;
+    width: 100%;
+
+    & > * {
+      display: table-cell;
+      text-align: center;
+    }
+  }
+
   & .sg-contents-timeline-comment {
 
     & dt {

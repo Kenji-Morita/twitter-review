@@ -5,6 +5,7 @@ var _this = this;
 // ===================================================================================
 //                                                                          Attributes
 //                                                                          ==========
+window.sawitter = this;
 var request = window.superagent;
 this.isLogin = opts.isLogin;
 this.obs = riot.observable();
@@ -26,6 +27,10 @@ this.doSignUp = function (mail, password, passwordConfirm) {
         if (response.ok) {
             location.reload();
         }
+        else {
+            var result = JSON.parse(response.text);
+            console.log(result.reason);
+        }
     });
 };
 this.doSignIn = function (mail, password) {
@@ -42,6 +47,10 @@ this.doSignIn = function (mail, password) {
         .end(function (error, response) {
         if (response.ok) {
             location.reload();
+        }
+        else {
+            var result = JSON.parse(response.text);
+            console.log(result.reason);
         }
     });
 };
@@ -133,12 +142,11 @@ this.showDetail = function (shareContentsId) {
     history.pushState(null, null, '/contents/' + shareContentsId);
 };
 this.generateIcon = function (input) {
-    var salt = 0;
     var rounds = 1;
     var size = 32;
     var outputType = "HEX";
     var hashType = "SHA-512";
-    var shaObj = new jsSHA(input + salt, "TEXT");
+    var shaObj = new jsSHA(input, "TEXT");
     var hash = shaObj.getHash(hashType, outputType, rounds);
     return new Identicon(hash, 32).toString();
 };
@@ -168,7 +176,7 @@ window.addEventListener("popstate", function (e) {
 
 });
 
-riot.tag('swt-contents', '<div class="sg-contents {sg-contents-separate: isDetail}"><swt-cover if="{!isDetail && !opts.isLogin}"></swt-cover><swt-tweet if="{!isDetail && opts.isLogin}"></swt-tweet><swt-timeline if="{!isDetail}" opts="{opts}"></swt-timeline><swt-detail if="{isDetail}" opts="{opts}"></swt-detail><swt-iframe if="{isDetail}" opts="{opts}"></swt-iframe><swt-modal if="{isShowModal}" opts="{opts}"></swt-modal></div>', function(opts) {// ===================================================================================
+riot.tag('swt-contents', '<div class="sg-contents {sg-contents-separate: isDetail}"><swt-cover if="{!isDetail && !sawitter.isLogin}"></swt-cover><swt-tweet if="{!isDetail && sawitter.isLogin}"></swt-tweet><swt-timeline if="{!isDetail}"></swt-timeline><swt-detail if="{isDetail}"></swt-detail><swt-iframe if="{isDetail}"></swt-iframe><swt-modal if="{isShowModal}"></swt-modal></div>', function(opts) {// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
@@ -180,19 +188,19 @@ this.isShowModal = false;
 // ===================================================================================
 //                                                                               Event
 //                                                                               =====
-opts.obs.on("showDetail", function () {
+sawitter.obs.on("showDetail", function () {
     _this.isDetail = true;
     _this.update();
 });
-opts.obs.on("hideDetail", function () {
+sawitter.obs.on("hideDetail", function () {
     _this.isDetail = false;
     _this.update();
 });
-opts.obs.on("showModal", function () {
+sawitter.obs.on("showModal", function () {
     _this.isShowModal = true;
     _this.update();
 });
-opts.obs.on("hideModal", function () {
+sawitter.obs.on("hideModal", function () {
     setTimeout(function () {
         _this.isShowModal = false;
         _this.update();
@@ -204,28 +212,74 @@ opts.obs.on("hideModal", function () {
 riot.tag('swt-cover', '<div class="sg-contents-cover"><ul></ul></div>', function(opts) {
 });
 
-riot.tag('swt-detail', '<div class="sg-contents-detail"><section><header><h1><a href="{contents.shareContents.url}" target="_blank">{contents.shareContents.title}</a></h1><p>{contents.shareContents.url}</p></header><swt-tweet-comment opts="{opts}" url="{contents.shareContents.url}"></swt-tweet-comment><ul class="sg-contents-detail-timeline"><li each="{contents.tweets}"><section><dl class="sg-contents-timeline-comment"><dt><img alt="icon" riot-src="data:image/png;base64,{this.generateIcon(identityHash)}"></dt><dd><p>{tweet.comment}</p><time>{tweet.postedAt}</time></dd></dl><ul class="sg-contents-timeline-btn"><li><a class="sg-contents-timeline-btn-good" onclick="{onPutGood}" __disabled="{!opts.isLogin}" href="#"><i class="fa fa-thumbs-up"></i> {value.good} <span data-id="{tweet.tweetId}"><i class="fa fa-thumbs-up"></i> Good </span></a></li><li><a class="sg-contents-timeline-btn-bad" onclick="{onPutBad}" __disabled="{!opts.isLogin}" href="#"><i class="fa fa-thumbs-down"></i> {value.bad} <span data-id="{tweet.tweetId}"><i class="fa fa-thumbs-down"></i> Bad </span></a></li></ul></section></li></ul></section></div>', function(opts) {// ===================================================================================
+riot.tag('swt-detail', '<div class="sg-contents-detail"><section><header><h1><a href="{contents.shareContents.url}" target="_blank">{contents.shareContents.title}</a></h1><p>{contents.shareContents.url}</p></header><swt-tweet-comment if="{sawitter.isLogin}" url="{contents.shareContents.url}"></swt-tweet-comment><ul class="sg-contents-timeline-sort"><li><button onclick="{sortByNew}">新着順</button></li><li><button onclick="{sortByGood}">Good順</button></li><li><button onclick="{sortByBad}">Bad順</button></li></ul><ul class="sg-contents-timeline"><li each="{contents.tweets}"><section><dl class="sg-contents-timeline-comment"><dt><img alt="icon" riot-src="data:image/png;base64,{generateIcon(identityHash)}"></dt><dd><p>{tweet.comment}</p><time>{tweet.postedAt}</time></dd></dl><swt-value-btns value="{value}" tweetid="{tweet.tweetId}"></swt-value-btns></section></li></ul></section></div>', function(opts) {// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
-var opts = opts.opts;
+var SortMode;
+(function (SortMode) {
+    SortMode[SortMode["new"] = 0] = "new";
+    SortMode[SortMode["good"] = 1] = "good";
+    SortMode[SortMode["bad"] = 2] = "bad";
+})(SortMode || (SortMode = {}));
 // ===================================================================================
 //                                                                          Attributes
 //                                                                          ==========
 this.contents = {};
+this.sortMode = SortMode.new;
 // ===================================================================================
 //                                                                               Event
 //                                                                               =====
-opts.obs.on("onContentsLoaded", function (contents) {
+this.sortByNew = function (e) {
+    e.preventDefault();
+    _this.sortMode = SortMode.new;
+    _this.sort();
+};
+this.sortByGood = function (e) {
+    e.preventDefault();
+    _this.sortMode = SortMode.good;
+    _this.sort();
+};
+this.sortByBad = function (e) {
+    e.preventDefault();
+    _this.sortMode = SortMode.bad;
+    _this.sort();
+};
+sawitter.obs.on("onContentsLoaded", function (contents) {
     _this.contents = contents;
+    _this.sort();
     _this.update();
 });
+sawitter.obs.on("onPosted", function () {
+    if (_this.contents.shareContents != undefined) {
+        setTimeout(function () {
+            sawitter.findContentsDetail(_this.contents.shareContents.shareContentsId);
+        }, 1000);
+    }
+});
+this.generateIcon = function (hash) {
+    var source = sawitter.generateIcon(hash);
+    return source;
+};
 // ===================================================================================
 //                                                                               Logic
 //                                                                               =====
-this.generateIcon = function (hash) {
-    var source = opts.generateIcon(hash);
-    return source;
+this.sort = function () {
+    _this.contents.tweets = _
+        .chain(_this.contents.tweets)
+        .sortBy(function (tweet) {
+        switch (_this.sortMode) {
+            case SortMode.new:
+                return tweet.tweet.timestamp;
+            case SortMode.good:
+                return tweet.value.good;
+            case SortMode.bad:
+                return tweet.value.bad;
+        }
+    })
+        .reverse()
+        .value();
+    _this.update();
 };
 
 });
@@ -233,14 +287,10 @@ this.generateIcon = function (hash) {
 riot.tag('swt-footer', '<footer class="sg-footer"><div class="sg-container"><p>(c)2015 SAW</p></div></footer>', function(opts) {
 });
 
-riot.tag('swt-header', '<header class="sg-header"><ul><li class="sg-header-logo"><h1><a href="/"><i class="fa fa-user-secret fa"></i> Sawitter</a></h1></li><li if="{isLogin}" class="sg-header-tweet"><a href="#" onclick="{tweetNews}"><i class="fa fa-pencil-square-o"></i></a></li><li class="sg-header-signs"><ul><li if="{!isLogin}" onclick="{onSignin}" class="sg-header-signin"><button>サインイン</button></li><li if="{!isLogin}" onclick="{onSignup}" class="sg-header-signup"><button>登録</button></li><li if="{isLogin}" onclick="{onSignout}" class="sg-header-signout"><button>サインアウト</button></li></ul></li></ul></header><form name="signin" class="sg-header-signs-signin" if="{false}"><label>メールアドレス</label><input type="text" name="signinMail" placeholder="メールアドレスを入力してください"><label>パスワード</label><input type="password" name="signinPassword" placeholder="パスワードを入力してください"></form><form name="signup" class="sg-header-signs-signup" if="{false}"><label>メールアドレス</label><input type="text" name="signupMail" placeholder="メールアドレスを入力してください"><label>パスワード</label><input type="password" name="signupPassword" placeholder="パスワードを入力してください"><label>パスワード(再確認)</label><input type="password" name="signupPasswordConfirm" placeholder="パスワードを再度入力してください"></form>', function(opts) {// ===================================================================================
+riot.tag('swt-header', '<header class="sg-header"><ul><li class="sg-header-logo"><h1><a href="/"><i class="fa fa-user-secret fa"></i> Sawitter</a></h1></li><li if="{sawitter.isLogin}" class="sg-header-tweet"><a href="#" onclick="{tweetNews}"><i class="fa fa-pencil-square-o"></i></a></li><li class="sg-header-signs"><ul><li if="{!sawitter.isLogin}" onclick="{onSignin}" class="sg-header-signin"><button>サインイン</button></li><li if="{!sawitter.isLogin}" onclick="{onSignup}" class="sg-header-signup"><button>登録</button></li><li if="{sawitter.isLogin}" onclick="{onSignout}" class="sg-header-signout"><button>サインアウト</button></li></ul></li></ul></header><form name="signin" class="sg-header-signs-signin" if="{false}"><label>メールアドレス</label><input type="text" name="signinMail" placeholder="メールアドレス"><label>パスワード(6~32桁の英数小大文字)</label><input type="password" name="signinPassword" placeholder="6~32桁の英数小大文字"></form><form name="signup" class="sg-header-signs-signup" if="{false}"><label>メールアドレス</label><input type="text" name="signupMail" placeholder="メールアドレス"><label>パスワード</label><input type="password" name="signupPassword" placeholder="6~32桁の英数小大文字"><label>パスワード(再確認)</label><input type="password" name="signupPasswordConfirm" placeholder="6~32桁の英数小大文字"></form>', function(opts) {// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
-// ===================================================================================
-//                                                                          Attributes
-//                                                                          ==========
-this.isLogin = opts.isLogin;
 // ===================================================================================
 //                                                                               Event
 //                                                                               =====
@@ -264,7 +314,7 @@ this.tweetNews = function (e) {
 };
 this.onSignin = function (e) {
     e.preventDefault();
-    opts.obs.trigger("showModal", {
+    sawitter.obs.trigger("showModal", {
         title: "サインイン",
         raw: _this.signin.innerHTML,
         okButtonMsg: "サインイン",
@@ -280,16 +330,16 @@ this.onSignin = function (e) {
                 alert("パスワードが入力されていません");
                 return;
             }
-            opts.doSignIn(mail, password);
+            sawitter.doSignIn(mail, password);
         },
         ng: function (raw) {
-            opts.obs.trigger("hideModal");
+            sawitter.obs.trigger("hideModal");
         }
     });
 };
 this.onSignup = function (e) {
     e.preventDefault();
-    opts.obs.trigger("showModal", {
+    sawitter.obs.trigger("showModal", {
         title: "登録",
         raw: _this.signup.innerHTML,
         okButtonMsg: "登録",
@@ -310,16 +360,16 @@ this.onSignup = function (e) {
                 alert("パスワード(再確認)が入力されていません");
                 return;
             }
-            opts.doSignUp(mail, password, passwordConfirm);
+            sawitter.doSignUp(mail, password, passwordConfirm);
         },
         ng: function (raw) {
-            opts.obs.trigger("hideModal");
+            sawitter.obs.trigger("hideModal");
         }
     });
 };
 this.onSignout = function (e) {
     e.preventDefault();
-    opts.doSignOut();
+    sawitter.doSignOut();
 };
 
 });
@@ -328,11 +378,10 @@ riot.tag('swt-iframe', '<iframe class="sg-contents-iframe" name="contentsIframe"
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
-var opts = opts.opts;
 // ===================================================================================
 //                                                                               Event
 //                                                                               =====
-opts.obs.on("onContentsLoaded", function (contents) {
+sawitter.obs.on("onContentsLoaded", function (contents) {
     _this.contentsIframe.src = contents.shareContents.url;
 });
 
@@ -342,7 +391,6 @@ riot.tag('swt-modal', '<div class="sg-contents-modal"><div class="{sg-contents-m
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
-var opts = opts.opts;
 // ===================================================================================
 //                                                                          Attributes
 //                                                                          ==========
@@ -353,7 +401,7 @@ this.contents = {};
 //                                                                               =====
 this.closeModal = function (e) {
     e.preventDefault();
-    opts.obs.trigger("hideModal");
+    sawitter.obs.trigger("hideModal");
 };
 this.onOk = function (e) {
     e.preventDefault();
@@ -363,7 +411,7 @@ this.onNg = function (e) {
     e.preventDefault();
     _this.contents.ng(_this.raw);
 };
-opts.obs.on("showModal", function (contents) {
+sawitter.obs.on("showModal", function (contents) {
     _this.contents = contents;
     _this.raw.innerHTML = contents.raw;
     setTimeout(function () {
@@ -371,7 +419,7 @@ opts.obs.on("showModal", function (contents) {
         _this.update();
     }, 1);
 });
-opts.obs.on("hideModal", function () {
+sawitter.obs.on("hideModal", function () {
     _this.contents = {};
     _this.raw.innerHTML = "";
     _this.isShowModal = false;
@@ -380,11 +428,10 @@ opts.obs.on("hideModal", function () {
 
 });
 
-riot.tag('swt-timeline', '<ul class="sg-contents-timeline {sg-contents-timeline-detail: isDetail}"><li each="{tweets}"><section><dl class="sg-contents-timeline-share"><dt><a href="/content/{shareContents.shareContentsId}" onclick="{onClickDetail}"><img riot-src="{shareContents.thumbnailUrl}" alt="{shareContents.title}"></a></dt><dd><h1><a href="/content/{shareContents.shareContentsId}" onclick="{onClickDetail}"> {shareContents.title} </a></h1></dd></dl><dl class="sg-contents-timeline-comment"><dt><i class="fa fa-user fa-2x"></i></dt><dd><p>{tweet.comment}</p><time>{tweet.postedAt}</time></dd></dl><ul class="sg-contents-timeline-btn"><li><a class="sg-contents-timeline-btn-good" onclick="{onPutGood}" __disabled="{!opts.isLogin}" href="#"><i class="fa fa-thumbs-up"></i> {value.good} <span data-id="{tweet.tweetId}"><i class="fa fa-thumbs-up"></i> Good </span></a></li><li><a class="sg-contents-timeline-btn-bad" onclick="{onPutBad}" __disabled="{!opts.isLogin}" href="#"><i class="fa fa-thumbs-down"></i> {value.bad} <span data-id="{tweet.tweetId}"><i class="fa fa-thumbs-down"></i> Bad </span></a></li></ul></section></li></ul>', function(opts) {// ===================================================================================
+riot.tag('swt-timeline', '<ul class="sg-contents-timeline {sg-contents-timeline-detail: isDetail}"><li each="{tweets}"><section><dl class="sg-contents-timeline-share"><dt><a href="/content/{shareContents.shareContentsId}" onclick="{onClickDetail}"><img riot-src="{shareContents.thumbnailUrl}" alt="{shareContents.title}"></a></dt><dd><h1><a href="/content/{shareContents.shareContentsId}" onclick="{onClickDetail}"> {shareContents.title} </a></h1></dd></dl><dl class="sg-contents-timeline-comment"><dt><i class="fa fa-user fa-2x"></i></dt><dd><p>{tweet.comment}</p><time>{tweet.postedAt}</time></dd></dl><swt-value-btns value="{value}" tweetid="{tweet.tweetId}"></swt-value-btns></section></li></ul>', function(opts) {// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
-var opts = opts.opts;
 // ===================================================================================
 //                                                                          Attributes
 //                                                                          ==========
@@ -395,38 +442,30 @@ this.tweets = [];
 //                                                                               =====
 this.onClickDetail = function (e) {
     e.preventDefault();
-    var commandLeftIndex = opts.currentKeyCodes.indexOf(91);
-    var commandRightIndex = opts.currentKeyCodes.indexOf(93);
+    var commandLeftIndex = sawitter.currentKeyCodes.indexOf(91);
+    var commandRightIndex = sawitter.currentKeyCodes.indexOf(93);
     if (commandLeftIndex >= 0 || commandRightIndex >= 0) {
         window.open(e.item.shareContents.url);
     }
     var shareContentsId = e.item.shareContents.shareContentsId;
-    opts.showDetail(shareContentsId);
+    sawitter.showDetail(shareContentsId);
 };
-this.onPutGood = function (e) {
-    e.preventDefault();
-    opts.putGood(e.target.getAttribute("data-id"));
-};
-this.onPutBad = function (e) {
-    e.preventDefault();
-    opts.putBad(e.target.getAttribute("data-id"));
-};
-opts.obs.on("onLoadTimeline", function (timeline) {
+sawitter.obs.on("onLoadTimeline", function (timeline) {
     _this.tweets = timeline;
     _this.update();
 });
-opts.obs.on("showDetail", function () {
+sawitter.obs.on("showDetail", function () {
     _this.isDetail = true;
     _this.update();
 });
-opts.obs.on("hideDetail", function () {
+sawitter.obs.on("hideDetail", function () {
     _this.isDetail = false;
     _this.update();
 });
-opts.obs.on("onValueUpdated", function (valueInfo) {
+sawitter.obs.on("onValueUpdated", function (valueInfo) {
     _this.update();
 });
-opts.obs.on("onPosted", function () {
+sawitter.obs.on("onPosted", function () {
     setTimeout(callFindTimeline, 100);
 });
 // ===================================================================================
@@ -434,10 +473,10 @@ opts.obs.on("onPosted", function () {
 //                                                                               =====
 var callFindTimeline = function () {
     if (_this.tweets.length > 0) {
-        opts.findTimeline(null, _this.tweets[0].timestamp);
+        sawitter.findTimeline(null, _this.tweets[0].timestamp);
     }
     else {
-        opts.findTimeline();
+        sawitter.findTimeline();
     }
 };
 var looper = function () {
@@ -452,7 +491,6 @@ riot.tag('swt-tweet-comment', '<div class="sg-contents-tweet"><form onsubmit="{o
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
-var opts = opts.opts.opts;
 // ===================================================================================
 //                                                                          Attributes
 //                                                                          ==========
@@ -478,21 +516,21 @@ this.onSubmit = function (e) {
         alert("コメントを入力してください");
         return;
     }
-    opts.obs.trigger("showModal", {
+    sawitter.obs.trigger("showModal", {
         title: "投稿確認",
         msg: comment,
         msgSub: "WEBページ(" + url + ")について、このコメントを投稿してもよろしいでしょうか？",
         okButtonMsg: "投稿",
         ngButtonMsg: "キャンセル",
         ok: function () {
-            opts.doPost(url, comment);
+            sawitter.doPost(url, comment);
             urlObj.value = "";
             commentObj.value = "";
             _this.commentLength = 0;
-            opts.obs.trigger("hideModal");
+            sawitter.obs.trigger("hideModal");
         },
         ng: function () {
-            opts.obs.trigger("hideModal");
+            sawitter.obs.trigger("hideModal");
         }
     });
 };
@@ -549,23 +587,46 @@ this.onSubmit = function (e) {
         alert("コメントを入力してください");
         return;
     }
-    opts.obs.trigger("showModal", {
+    sawitter.obs.trigger("showModal", {
         title: "投稿確認",
         msg: comment,
         msgSub: "WEBページ(" + url + ")について、このコメントを投稿してもよろしいでしょうか？",
         okButtonMsg: "投稿",
         ngButtonMsg: "キャンセル",
         ok: function () {
-            opts.doPost(url, comment);
+            sawitter.doPost(url, comment);
             urlObj.value = "";
             commentObj.value = "";
+            sawitter.obs.trigger("hideModal");
             _this.commentLength = 0;
-            opts.obs.trigger("hideModal");
+            _this.isStartDisplayComment = true;
+            _this.isDisplayComment = true;
+            _this.update();
         },
         ng: function () {
-            opts.obs.trigger("hideModal");
+            sawitter.obs.trigger("hideModal");
         }
     });
+};
+
+});
+
+riot.tag('swt-value-btns', '<ul class="sg-contents-timeline-btn"><li if="{sawitter.isLogin && !opts.value.isValued}"><a class="sg-contents-timeline-btn-good" onclick="{onPutGood}" href="#"><i class="fa fa-thumbs-up"></i> {opts.value.good} <span><i class="fa fa-thumbs-up"></i> Good </span></a></li><li if="{sawitter.isLogin && !opts.value.isValued}"><a class="sg-contents-timeline-btn-bad" onclick="{onPutBad}" href="#"><i class="fa fa-thumbs-down"></i> {opts.value.bad} <span><i class="fa fa-thumbs-down"></i> Bad </span></a></li><li if="{sawitter.isLogin && opts.value.isValued}"><a class="sg-contents-timeline-btn-good sg-contents-timeline-btn-complete" onclick="{onCancel}" href="#"><i class="fa fa-thumbs-up"></i> {opts.value.good} <span>Cancel</span></a></li><li if="{sawitter.isLogin && opts.value.isValued}"><a class="sg-contents-timeline-btn-bad sg-contents-timeline-btn-complete" onclick="{onCancel}" href="#"><i class="fa fa-thumbs-down"></i> {opts.value.bad} <span>Cancel</span></a></li><li if="{!sawitter.isLogin}"><a class="sg-contents-timeline-btn-good"><i class="fa fa-thumbs-up"></i> {opts.value.good} </a></li><li if="{!sawitter.isLogin}"><a class="sg-contents-timeline-btn-bad"><i class="fa fa-thumbs-down"></i> {opts.value.bad} </a></li></ul>', function(opts) {// ===================================================================================
+//                                                                             Declare
+//                                                                             =======
+// ===================================================================================
+//                                                                               Event
+//                                                                               =====
+this.onPutGood = function (e) {
+    e.preventDefault();
+    sawitter.putGood(opts.tweetid);
+};
+this.onPutBad = function (e) {
+    e.preventDefault();
+    sawitter.putBad(opts.tweetid);
+};
+this.onCancel = function (e) {
+    e.preventDefault();
 };
 
 });

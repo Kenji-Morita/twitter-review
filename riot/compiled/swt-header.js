@@ -1,11 +1,7 @@
-riot.tag('swt-header', '<header class="sg-header"><ul><li class="sg-header-logo"><h1><a href="/"><i class="fa fa-user-secret fa"></i> Sawitter</a></h1></li><li if="{isLogin}" class="sg-header-tweet"><a href="#" onclick="{tweetNews}"><i class="fa fa-pencil-square-o"></i></a></li><li class="sg-header-signs"><ul><li if="{!isLogin}" onclick="{onSignin}" class="sg-header-signin"><button>サインイン</button></li><li if="{!isLogin}" onclick="{onSignup}" class="sg-header-signup"><button>登録</button></li><li if="{isLogin}" onclick="{onSignout}" class="sg-header-signout"><button>サインアウト</button></li></ul></li></ul></header><form name="signin" class="sg-header-signs-signin" if="{false}"><label>メールアドレス</label><input type="text" name="signinMail" placeholder="メールアドレスを入力してください"><label>パスワード</label><input type="password" name="signinPassword" placeholder="パスワードを入力してください"></form><form name="signup" class="sg-header-signs-signup" if="{false}"><label>メールアドレス</label><input type="text" name="signupMail" placeholder="メールアドレスを入力してください"><label>パスワード</label><input type="password" name="signupPassword" placeholder="パスワードを入力してください"><label>パスワード(再確認)</label><input type="password" name="signupPasswordConfirm" placeholder="パスワードを再度入力してください"></form>', function(opts) {// ===================================================================================
+riot.tag('swt-header', '<header class="sg-header"><ul><li class="sg-header-logo"><h1><a href="/"><i class="fa fa-user-secret fa"></i> Sawitter</a></h1></li><li if="{sawitter.isLogin}" class="sg-header-tweet"><a href="#" onclick="{tweetNews}"><i class="fa fa-pencil-square-o"></i></a></li><li class="sg-header-signs"><ul><li if="{!sawitter.isLogin}" onclick="{onSignin}" class="sg-header-signin"><button>サインイン</button></li><li if="{!sawitter.isLogin}" onclick="{onSignup}" class="sg-header-signup"><button>登録</button></li><li if="{sawitter.isLogin}" onclick="{onSignout}" class="sg-header-signout"><button>サインアウト</button></li></ul></li></ul></header><form name="signin" class="sg-header-signs-signin" if="{false}"><label>メールアドレス</label><input type="text" name="signinMail" placeholder="メールアドレス"><label>パスワード(6~32桁の英数小大文字)</label><input type="password" name="signinPassword" placeholder="6~32桁の英数小大文字"></form><form name="signup" class="sg-header-signs-signup" if="{false}"><label>メールアドレス</label><input type="text" name="signupMail" placeholder="メールアドレス"><label>パスワード</label><input type="password" name="signupPassword" placeholder="6~32桁の英数小大文字"><label>パスワード(再確認)</label><input type="password" name="signupPasswordConfirm" placeholder="6~32桁の英数小大文字"></form>', function(opts) {// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
-// ===================================================================================
-//                                                                          Attributes
-//                                                                          ==========
-this.isLogin = opts.isLogin;
 // ===================================================================================
 //                                                                               Event
 //                                                                               =====
@@ -29,7 +25,7 @@ this.tweetNews = function (e) {
 };
 this.onSignin = function (e) {
     e.preventDefault();
-    opts.obs.trigger("showModal", {
+    sawitter.obs.trigger("showModal", {
         title: "サインイン",
         raw: _this.signin.innerHTML,
         okButtonMsg: "サインイン",
@@ -45,16 +41,16 @@ this.onSignin = function (e) {
                 alert("パスワードが入力されていません");
                 return;
             }
-            opts.doSignIn(mail, password);
+            sawitter.doSignIn(mail, password);
         },
         ng: function (raw) {
-            opts.obs.trigger("hideModal");
+            sawitter.obs.trigger("hideModal");
         }
     });
 };
 this.onSignup = function (e) {
     e.preventDefault();
-    opts.obs.trigger("showModal", {
+    sawitter.obs.trigger("showModal", {
         title: "登録",
         raw: _this.signup.innerHTML,
         okButtonMsg: "登録",
@@ -75,16 +71,16 @@ this.onSignup = function (e) {
                 alert("パスワード(再確認)が入力されていません");
                 return;
             }
-            opts.doSignUp(mail, password, passwordConfirm);
+            sawitter.doSignUp(mail, password, passwordConfirm);
         },
         ng: function (raw) {
-            opts.obs.trigger("hideModal");
+            sawitter.obs.trigger("hideModal");
         }
     });
 };
 this.onSignout = function (e) {
     e.preventDefault();
-    opts.doSignOut();
+    sawitter.doSignOut();
 };
 
 });

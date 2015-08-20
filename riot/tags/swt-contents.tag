@@ -1,11 +1,11 @@
 <swt-contents>
   <div class="sg-contents {sg-contents-separate: isDetail}">
-    <swt-cover if={!isDetail && !opts.isLogin}></swt-cover>
-    <swt-tweet if={!isDetail && opts.isLogin}></swt-tweet>
-    <swt-timeline if={!isDetail} opts={opts}></swt-timeline>
-    <swt-detail if={isDetail} opts={opts}></swt-detail>
-    <swt-iframe if={isDetail} opts={opts}></swt-iframe>
-    <swt-modal if={isShowModal} opts={opts}></swt-modal>
+    <swt-cover if={!isDetail && !sawitter.isLogin}></swt-cover>
+    <swt-tweet if={!isDetail && sawitter.isLogin}></swt-tweet>
+    <swt-timeline if={!isDetail}></swt-timeline>
+    <swt-detail if={isDetail}></swt-detail>
+    <swt-iframe if={isDetail}></swt-iframe>
+    <swt-modal if={isShowModal}></swt-modal>
   </div>
 
   <script>
@@ -13,7 +13,7 @@
     //                                                                             Declare
     //                                                                             =======
 
-    declare var opts: any;
+    declare var sawitter: any;
 
     // ===================================================================================
     //                                                                          Attributes
@@ -26,22 +26,22 @@
     //                                                                               Event
     //                                                                               =====
 
-    opts.obs.on("showDetail", () => {
+    sawitter.obs.on("showDetail", () => {
       this.isDetail = true;
       this.update();
     });
 
-    opts.obs.on("hideDetail", () => {
+    sawitter.obs.on("hideDetail", () => {
       this.isDetail = false;
       this.update();
     });
 
-    opts.obs.on("showModal", () => {
+    sawitter.obs.on("showModal", () => {
       this.isShowModal = true;
       this.update();
     });
 
-    opts.obs.on("hideModal", () => {
+    sawitter.obs.on("hideModal", () => {
       setTimeout(() => {
         this.isShowModal = false;
         this.update();

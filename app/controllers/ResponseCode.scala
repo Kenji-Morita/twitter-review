@@ -10,36 +10,28 @@ object ResponseCode {
   // ===================================================================================
   //                                                                             Success
   //                                                                             =======
-  val NoReason                              = (20000, "No reason")
+
+  val NoReason                              = (20000, "OK")
 
   // ===================================================================================
   //                                                                         Bad Request
   //                                                                         ===========
-  val ValidationError                       = (40000, "Input json is invalid")
 
-  val ScreenNameIsEmpty                     = (40000, "ScreenName is empty")
+  val ValidationError                       = (40000, "入力した値に異常があります")
 
-  val DisplayNameIsEmpty                    = (40000, "DisplayName is empty")
+  val PasswordsNotMatch                     = (40001, "パスワードが一致しません")
 
-  val MailIsEmpty                           = (40000, "Mail is empty")
+  def MailIsUsed(mail: String)              = (40002, s"メールアドレス['$mail']はすでに利用されています")
 
-  val PasswordIsEmpty                       = (40000, "Password is empty")
+  val HashValuesNotMatch                    = (40003, "確認できませんでした")
+
+  val SignInFailed                          = (40004, "サインインに失敗しました。メールアドレスとパスワードを確認してください")
+
+  val NotConfirmed                          = (40005, "サインインに失敗しました。確認メールが承認されていません")
 
   val TextIsEmpty                           = (40000, "Text is empty")
 
   val AccountIsEmpty                        = (40000, "Please set screenName or mail")
-
-  val PasswordsNotMatch                     = (40000, "Passwords are not match")
-
-  val HashValuesNotMatch                    = (40000, "Hash values are not match")
-
-  def ScreenNameIsUsed(screenName: String)  = (40000, s"Screen name '$screenName' is already used")
-
-  def MailIsUsed(mail: String)              = (40000, s"Mail address '$mail' is already used ")
-
-  val SignInFailed                          = (40000, "Sign in failed. please check screenName or mail and password")
-
-  val NotConfirmed                          = (40000, "Sign in failed. please confirm mail when you registered")
 
   val TweetFailed                           = (40000, "Tweet failed. please try again")
 
@@ -56,14 +48,15 @@ object ResponseCode {
   // ===================================================================================
   //                                                                        UnAuthorized
   //                                                                        ============
-  val NeedSignIn                            = (40100, "You need authentication")
+
+  val NeedSignIn                            = (40100, "この操作はサインインしている必要があります")
 
   // ===================================================================================
   //                                                                           Not Found
   //                                                                           =========
-  val MemberNotFound                        = (40400, "Member not found")
+  val MemberNotFound                        = (40400, "ユーザが見つかりませんでした")
 
-  val TweetNotFound                         = (40400, "Tweet not found")
+  val TweetNotFound                         = (40401, "つぶやきが見つかりませんでした")
 
-  val HashNotFound                          = (40400, "Hash not found")
+  val HashNotFound                          = (40402, "Hash not found")
 }

@@ -6,15 +6,12 @@
 GET         /                                           controllers.FrontController.index
 GET         /confirm/:memberId:confirmHash              controllers.api.AuthController.confirm(memberId: String, confirmHash: String)
 GET         /contents/:shareContentsId                  controllers.FrontController.contents(shareContentsId: String)
-GET         /tweet/:tweetId                             controllers.FrontController.tweet(tweetId: String)
-### GET         /profile                                    controllers.FrontController.profile
 
 # Auth
 POST        /api/auth/signup                            controllers.api.AuthController.signUp
 GET         /api/auth/confirm/:memberId/:confirmHash    controllers.api.AuthController.confirm(memberId: String, confirmHash: String)
 POST        /api/auth/signin                            controllers.api.AuthController.signIn
 POST        /api/auth/signout                           controllers.api.AuthController.signOut
-### GET         /api/auth/profile                          controllers.api.AuthController.profile
 ### DELETE      /api/auth/withdrawal                       controllers.api.AuthController.withdrawal
 
 # Timeline

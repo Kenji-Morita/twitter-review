@@ -28,8 +28,8 @@ class AuthController extends Controller {
     implicit request =>
       implicit val signUpReads: Reads[SignUp] = (
         (JsPath \ "mail").read[String](Reads.email) and
-        (JsPath \ "password").read[String](minLength[String](1) keepAnd maxLength[String](32)) and
-        (JsPath \ "passwordConfirm").read[String](minLength[String](1) keepAnd maxLength[String](32))
+        (JsPath \ "password").read[String](pattern("""^\w+$""".r) keepAnd minLength[String](6) keepAnd maxLength[String](32)) and
+        (JsPath \ "passwordConfirm").read[String](pattern("""^\w+$""".r) keepAnd minLength[String](6) keepAnd maxLength[String](32))
       )(SignUp.apply _)
 
       request.body.validate[SignUp] match {
@@ -76,8 +76,8 @@ class AuthController extends Controller {
   def signIn = Action.async(parse.json) {
     implicit request =>
       implicit val signUpReads: Reads[SignIn] = (
-        (JsPath \ "mail").read[String] and
-          (JsPath \ "password").read[String]
+        (JsPath \ "mail").read[String](Reads.email) and
+          (JsPath \ "password").read[String](pattern("""^\w+$""".r) keepAnd minLength[String](6) keepAnd maxLength[String](32))
         )(SignIn.apply _)
 
       request.body.validate[SignIn] match {
@@ -95,11 +95,4 @@ class AuthController extends Controller {
     implicit request =>
       Ok(successJson).withSession(request.session - "memberId")
   }
-
-//  def memberDetail = AuthAction.async {
-//    implicit request =>
-//      getSessionMember(request).map { loginMember =>
-//        Redirect(s"/api/member/detail/${loginMember.memberId}")
-//      }
-//  }
 }

@@ -118,10 +118,6 @@ es PUT _mapping/tweet '
         "index": "not_analyzed",
         "type": "string"
       },
-      "replyToTweetId": {
-        "index": "not_analyzed",
-        "type": "string"
-      },
       "comment": {"type": "string"},
       "reTweetFromId": {
         "index": "not_analyzed",
@@ -303,7 +299,6 @@ es POST tweet/4 '
   "memberId": "1",
   "shareContentsSurfaceUrl": "https://jp.stanby.com/",
   "shareContentsId": "2",
-  "replyToTweetId": "3",
   "comment": "ほんとそれ",
   "deleted": false
 }'
@@ -340,7 +335,6 @@ es POST tweet/8 '
   "memberId": "3",
   "shareContentsSurfaceUrl": "http://u222u.info/ngFJ",
   "shareContentsId": "4",
-  "replyToTweetId": "7",
   "comment": "そういう機能はないです",
   "deleted": false
 }'

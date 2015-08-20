@@ -14,11 +14,11 @@ import utils.HashUtil.crypt
 
 import scala.util.matching.Regex
 
-case class ShareContentsDetail(shareContents: ShareContents, tweets: List[Tweet]) {
+case class ShareContentsDetail(shareContents: ShareContents, tweets: List[Tweet], loginMemberOpt: Option[Member]) {
 
   def toJson: Future[JsValue] = {
     val inner = tweets.map { tweet =>
-      ValueModel.countValueByTweet(tweet).map { valueCount =>
+      ValueModel.countValueByTweet(tweet, loginMemberOpt).map { valueCount =>
         Map(
           "tweet" -> tweet.toJson,
           "value" -> valueCount.toJson,

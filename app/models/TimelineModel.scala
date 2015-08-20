@@ -25,19 +25,6 @@ object TimelineModel {
   // ===================================================================================
   //                                                                                Find
   //                                                                                ====
-//  def findByMemberIds(memberIds: List[String], before: Long, after: Long): Future[List[Tweet]] = ElasticsearchUtil.process { client =>
-//    client.execute(search in "twitter/tweet" fields "_timestamp" fields "_source" query {
-//      filteredQuery filter {
-//        andFilter(
-//            termsFilter("memberId", memberIds: _*),
-//            termFilter("deleted", false),
-//            numericRangeFilter("_timestamp") lte before gt after
-//        )
-//      }
-//    } sort (
-//      by field "_timestamp" order SortOrder.DESC
-//    )).map(_.getHits.getHits.toList.map(TweetModel.mapping(_)))
-//  }
 
   def findAll(loginMemberOpt: Option[Member], before: Long, after: Long): Future[List[TimelineObject]] = ElasticsearchUtil.process { client =>
     // TODO 過去のGood/Badからいい感じにフィルタリングする
@@ -53,7 +40,7 @@ object TimelineModel {
       by field "_timestamp" order SortOrder.DESC
     )).map(_.getHits.getHits.toList.map { hit =>
       TweetModel.findById(hit.getId).flatMap { tweet =>
-        ValueModel.countValueByTweet(tweet.get).flatMap { valueCount =>
+        ValueModel.countValueByTweet(tweet.get, loginMemberOpt).flatMap { valueCount =>
           ShareContentsModel.findById(hit.getSource.get("shareContentsId").asInstanceOf[String]).map { shareContents =>
             TimelineObject(tweet.get, shareContents, valueCount)
           }

@@ -2,7 +2,6 @@ riot.tag('swt-modal', '<div class="sg-contents-modal"><div class="{sg-contents-m
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
-var opts = opts.opts;
 // ===================================================================================
 //                                                                          Attributes
 //                                                                          ==========
@@ -13,7 +12,7 @@ this.contents = {};
 //                                                                               =====
 this.closeModal = function (e) {
     e.preventDefault();
-    opts.obs.trigger("hideModal");
+    sawitter.obs.trigger("hideModal");
 };
 this.onOk = function (e) {
     e.preventDefault();
@@ -23,7 +22,7 @@ this.onNg = function (e) {
     e.preventDefault();
     _this.contents.ng(_this.raw);
 };
-opts.obs.on("showModal", function (contents) {
+sawitter.obs.on("showModal", function (contents) {
     _this.contents = contents;
     _this.raw.innerHTML = contents.raw;
     setTimeout(function () {
@@ -31,7 +30,7 @@ opts.obs.on("showModal", function (contents) {
         _this.update();
     }, 1);
 });
-opts.obs.on("hideModal", function () {
+sawitter.obs.on("hideModal", function () {
     _this.contents = {};
     _this.raw.innerHTML = "";
     _this.isShowModal = false;

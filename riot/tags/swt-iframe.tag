@@ -6,14 +6,13 @@
     //                                                                             Declare
     //                                                                             =======
 
-    declare var opts: any;
-    var opts = opts.opts;
+    declare var sawitter: any;
 
     // ===================================================================================
     //                                                                               Event
     //                                                                               =====
 
-    opts.obs.on("onContentsLoaded", contents => {
+    sawitter.obs.on("onContentsLoaded", contents => {
       this.contentsIframe.src = contents.shareContents.url;
     });
   </script>

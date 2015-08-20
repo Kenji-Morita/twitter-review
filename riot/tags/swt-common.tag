@@ -11,6 +11,7 @@
     declare var jsSHA: any;
     interface Window {
       superagent: any;
+      sawitter: any;
     }
     interface Event {
       originalEvent: any;
@@ -23,6 +24,7 @@
     //                                                                          Attributes
     //                                                                          ==========
 
+    window.sawitter = this;
     var request = window.superagent;
     this.isLogin = opts.isLogin;
     this.obs = riot.observable();
@@ -46,6 +48,9 @@
         .end((error, response) => {
           if (response.ok) {
             location.reload();
+          } else {
+            var result = JSON.parse(response.text);
+            console.log(result.reason);
           }
         })
     };
@@ -65,6 +70,9 @@
         .end((error, response) => {
           if (response.ok) {
             location.reload();
+          } else {
+            var result = JSON.parse(response.text);
+            console.log(result.reason);
           }
         });
     };
@@ -166,12 +174,11 @@
     };
 
     this.generateIcon = input => {
-      var salt = 0;
       var rounds = 1;
       var size = 32;
       var outputType = "HEX";
       var hashType = "SHA-512";
-      var shaObj = new jsSHA(input + salt, "TEXT");
+      var shaObj = new jsSHA(input, "TEXT");
       var hash = shaObj.getHash(hashType, outputType, rounds);
       return new Identicon(hash, 32).toString();
     };

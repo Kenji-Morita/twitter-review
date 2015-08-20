@@ -156,6 +156,13 @@ p {
         text-decoration: none; }
         .sg-contents .sg-contents-timeline h1 a:hover {
           text-decoration: underline; }
+  .sg-contents .sg-contents-timeline-sort {
+    display: table;
+    table-layout: fixed;
+    width: 100%; }
+    .sg-contents .sg-contents-timeline-sort > * {
+      display: table-cell;
+      text-align: center; }
   .sg-contents .sg-contents-timeline-comment dt {
     width: 52px;
     position: relative;
