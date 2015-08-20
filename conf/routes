@@ -21,7 +21,6 @@ GET         /api/timeline/home                          controllers.api.Timeline
 # Tweet
 GET         /api/contents/:shareContentsId              controllers.api.ShareContentsController.detail(shareContentsId: String)
 POST        /api/tweet/tweet                            controllers.api.TweetController.tweet
-POST        /api/tweet/reply/:tweetId                   controllers.api.TweetController.reply(tweetId: String)
 DELETE      /api/tweet/delete/:tweetId                  controllers.api.TweetController.delete(tweetId: String)
 
 # Value

@@ -29,6 +29,9 @@
       </section>
     </li>
   </ul>
+  <div>
+    <button onclick={findPastTweet}>過去のつぶやきを取得</button>
+  </div>
 
   <script>
     // ===================================================================================
@@ -57,6 +60,12 @@
       }
       var shareContentsId = e.item.shareContents.shareContentsId;
       sawitter.showDetail(shareContentsId);
+    }
+
+    this.findPastTweet = e => {
+      e.preventDefault();
+      // 最後のツイートIDを渡す
+      // sawitter.findPastTweet();
     }
 
     sawitter.obs.on("onLoadTimeline", timeline => {

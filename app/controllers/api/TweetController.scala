@@ -39,29 +39,6 @@ class TweetController extends Controller {
       }
   }
 
-  def reply(tweetId: String) = AuthAction.async(parse.json) {
-    implicit request =>
-      implicit val tweetReads: Reads[PostedTweet] = (
-        (JsPath \ "url").read[String] and
-          (JsPath \ "comment").read[String](minLength[String](1) keepAnd maxLength[String](32))
-        )(PostedTweet.apply _)
-      request.body.validate[PostedTweet] match {
-        case JsSuccess(value, path) => {
-          getSessionMember(request).flatMap { loginMember =>
-            TweetModel.findById(tweetId).flatMap {
-              case None => Future.successful(NotFound(createJson(TweetNotFound)))
-              case Some(tweet) => {
-                ShareContentsModel.createOrFind(value.url).flatMap { shareContents =>
-                  TweetModel.tweet(loginMember.memberId, value.url, value.comment, shareContents).map(tweetId => Ok(createJson(NoReason, tweetId)))
-                }
-              }
-            }
-          }
-        }
-        case e: JsError => Future.successful(BadRequest(createJson(ValidationError, JsError.toJson(e))))
-      }
-  }
-
   def delete(tweetId: String) = AuthAction.async {
     implicit request =>
       getSessionMember(request).flatMap { loginMember =>

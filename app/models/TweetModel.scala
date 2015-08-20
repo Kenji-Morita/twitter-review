@@ -70,7 +70,7 @@ object TweetModel {
   }
 
   def findByShareContentsIds(shareContentsId: String): Future[List[Tweet]] = ElasticsearchUtil.process { client =>
-    client.execute(search in "twitter/tweet" fields "_timestamp" fields "_source" query {
+    client.execute(search in "twitter/tweet" fields "_timestamp" fields "_source" size 20 query {
       filteredQuery filter {
         andFilter(
           termFilter("shareContentsId", shareContentsId),
@@ -91,17 +91,6 @@ object TweetModel {
   def tweet(authorMemberId: String, surfaceUrl: String, comment: String, shareContents: ShareContents): Future[String] = ElasticsearchUtil.process { client =>
     client.execute(index into "twitter/tweet" fields (
       "memberId" -> authorMemberId,
-      "comment" -> comment,
-      "shareContentsSurfaceUrl" -> surfaceUrl,
-      "shareContentsId" -> shareContents.shareContentsId,
-      "deleted" -> false
-    )).map(_.getId)
-  }
-
-  def reply(authorMemberId: String, replyToTweet: Tweet, surfaceUrl: String, comment: String, shareContents: ShareContents): Future[String] = ElasticsearchUtil.process { client =>
-    client.execute(index into "twitter/tweet" fields (
-      "memberId" -> authorMemberId,
-      "replyToTweetId" -> replyToTweet.tweetId,
       "comment" -> comment,
       "shareContentsSurfaceUrl" -> surfaceUrl,
       "shareContentsId" -> shareContents.shareContentsId,
