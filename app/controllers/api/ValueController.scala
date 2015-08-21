@@ -3,7 +3,7 @@ package controllers.api
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import play.api.mvc.Controller
+import play.api.mvc.{Action, Controller}
 
 import actions.AuthAction
 import actions.AuthAction.getSessionMember
@@ -17,15 +17,31 @@ import utils.JsonUtil._
  */
 class ValueController extends Controller {
 
-  def good(tweetId: String) = AuthAction.async {
-    implicit request =>
+  def count(tweetId: String) = Action.async {
+    request =>
       TweetModel.findById(tweetId).flatMap {
         case None => Future.successful(NotFound(createJson(TweetNotFound)))
         case Some(tweet) => getSessionMember(request).flatMap { loginMember =>
-          ValueModel.existsValued(loginMember, tweet).flatMap {
-            case true => Future.successful(BadRequest(createJson(AlreadyValued)))
-            case false => {
-              ValueModel.good(loginMember, tweet).map(valueCount => Ok(createJson(NoReason, valueCount.toJson)))
+          ValueModel.countValueByTweet(tweet, Some(loginMember)).map { valueCount =>
+            Ok(createJson(NoReason, valueCount.toJson))
+          }
+        }
+      }
+  }
+
+  def good(tweetId: String) = AuthAction.async {
+    request =>
+      TweetModel.findById(tweetId).flatMap {
+        case None => Future.successful(NotFound(createJson(TweetNotFound)))
+        case Some(tweet) => getSessionMember(request).flatMap { loginMember =>
+          tweet.memberId == loginMember.memberId match {
+            case true => Future.successful(BadRequest(createJson(TweetIsMine)))
+            case false => ValueModel.existsValued(loginMember, tweet).flatMap {
+              case true => Future.successful(BadRequest(createJson(AlreadyValued)))
+              case false => {
+                ValueModel.good(loginMember, tweet)
+                Future.successful(Ok(createJson(NoReason)))
+              }
             }
           }
         }
@@ -33,14 +49,34 @@ class ValueController extends Controller {
   }
 
   def bad(tweetId: String) = AuthAction.async {
-    implicit request =>
+    request =>
+      TweetModel.findById(tweetId).flatMap {
+        case None => Future.successful(NotFound(createJson(TweetNotFound)))
+        case Some(tweet) => getSessionMember(request).flatMap { loginMember =>
+          tweet.memberId == loginMember.memberId match {
+            case true => Future.successful(BadRequest(createJson(TweetIsMine)))
+            case false => ValueModel.existsValued(loginMember, tweet).flatMap {
+              case true => Future.successful(BadRequest(createJson(AlreadyValued)))
+              case false => {
+                ValueModel.bad(loginMember, tweet)
+                Future.successful(Ok(createJson(NoReason)))
+              }
+            }
+          }
+        }
+      }
+  }
+
+  def cancel(tweetId: String) = AuthAction.async {
+    request =>
       TweetModel.findById(tweetId).flatMap {
         case None => Future.successful(NotFound(createJson(TweetNotFound)))
         case Some(tweet) => getSessionMember(request).flatMap { loginMember =>
           ValueModel.existsValued(loginMember, tweet).flatMap {
-            case true => Future.successful(BadRequest(createJson(AlreadyValued)))
-            case false => {
-              ValueModel.bad(loginMember, tweet).map(valueCount => Ok(createJson(NoReason, valueCount.toJson)))
+            case false => Future.successful(BadRequest(createJson(AlreadyValued)))
+            case true => {
+              ValueModel.cancel(loginMember, tweet)
+              Future.successful(Ok(createJson(NoReason)))
             }
           }
         }

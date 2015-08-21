@@ -4,15 +4,12 @@ import java.time.format.DateTimeFormatter
 import java.time.{ZoneOffset, LocalDateTime}
 import java.util
 
-import org.elasticsearch.search.sort.SortOrder
-
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import com.sksamuel.elastic4s.ElasticDsl._
-
 import org.elasticsearch.search.SearchHit
-
+import org.elasticsearch.search.sort.SortOrder
 import play.api.libs.json._
 
 import utils.ElasticsearchUtil

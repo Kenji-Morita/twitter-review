@@ -93,6 +93,25 @@
       }
     });
 
+    sawitter.obs.on("onValueUpdate", result => {
+      setTimeout(() => {
+        sawitter.reloadValue(result.tweetId);
+      }, 1000);
+    });
+
+    sawitter.obs.on("onValueReload", result => {
+      this.contents.tweets = _
+        .chain(this.contents.tweets)
+        .map(t => {
+          if (t.tweet.tweetId == result.tweetId) {
+            t.value = result.value;
+          }
+          return t;
+        })
+        .value();
+      this.update();
+    });
+
     this.generateIcon = hash => {
       var source = sawitter.generateIcon(hash);
       return source;

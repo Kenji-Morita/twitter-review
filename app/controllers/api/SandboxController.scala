@@ -1,6 +1,6 @@
 package controllers.api
 
-import models.{ShareContentsModel, ShareContents}
+import models.{ValueModel, ShareContentsModel, ShareContents}
 import play.api.mvc.{Action, Controller}
 import actions.AuthAction
 
@@ -13,9 +13,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class SandboxController extends Controller {
 
   def get = Action {
-    implicit request => {
-      Ok
-    }
+    Ok
   }
 
   def auth = AuthAction {

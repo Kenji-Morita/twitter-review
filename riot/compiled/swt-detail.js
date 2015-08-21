@@ -43,6 +43,23 @@ sawitter.obs.on("onPosted", function () {
         }, 1000);
     }
 });
+sawitter.obs.on("onValueUpdate", function (result) {
+    setTimeout(function () {
+        sawitter.reloadValue(result.tweetId);
+    }, 1000);
+});
+sawitter.obs.on("onValueReload", function (result) {
+    _this.contents.tweets = _
+        .chain(_this.contents.tweets)
+        .map(function (t) {
+        if (t.tweet.tweetId == result.tweetId) {
+            t.value = result.value;
+        }
+        return t;
+    })
+        .value();
+    _this.update();
+});
 this.generateIcon = function (hash) {
     var source = sawitter.generateIcon(hash);
     return source;

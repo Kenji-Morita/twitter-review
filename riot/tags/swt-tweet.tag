@@ -87,6 +87,10 @@
           sawitter.obs.trigger("hideModal");
         }
       });
-    }
+    };
+
+    sawitter.obs.on("onReadyPost", () => {
+      this.tweetUrl.focus();
+    });
   </script>
 </swt-tweet>

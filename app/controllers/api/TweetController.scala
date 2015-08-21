@@ -46,7 +46,7 @@ class TweetController extends Controller {
           tweetOpt match {
           case None => BadRequest(createJson(TweetNotFound))
           case targetTweet if targetTweet.get.memberId != loginMember.memberId => BadRequest(createJson(TweetIsNotYours))
-          case targetTweet if targetTweet.get.deleted => BadRequest(createJson(TweetDeleted))
+          case targetTweet if targetTweet.get.deleted => NotFound(createJson(TweetNotFound))
           case targetTweet => {
             TweetModel.delete(targetTweet.get)
             Ok(successJson)

@@ -45,5 +45,8 @@ this.onSubmit = function (e) {
         }
     });
 };
+sawitter.obs.on("onReadyPost", function () {
+    _this.tweetComment.focus();
+});
 
 });

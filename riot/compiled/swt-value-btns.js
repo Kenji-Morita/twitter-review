@@ -14,6 +14,10 @@ this.onPutBad = function (e) {
 };
 this.onCancel = function (e) {
     e.preventDefault();
+    var result = confirm("評価を取り消しますか？");
+    if (result) {
+        sawitter.putCancel(opts.tweetid);
+    }
 };
 
 });

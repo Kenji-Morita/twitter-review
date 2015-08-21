@@ -19,6 +19,12 @@ this.tweetNews = function (e) {
             if (targetY > 0) {
                 setTimeout(scrollToTop, runTime / fps);
             }
+            else {
+                sawitter.obs.trigger("onReadyPost");
+            }
+        }
+        else {
+            sawitter.obs.trigger("onReadyPost");
         }
     };
     scrollToTop();

@@ -24,8 +24,10 @@ POST        /api/tweet/tweet                            controllers.api.TweetCon
 DELETE      /api/tweet/delete/:tweetId                  controllers.api.TweetController.delete(tweetId: String)
 
 # Value
+GET         /api/value/count/:tweetId                   controllers.api.ValueController.count(tweetId: String)
 PUT         /api/value/good/:tweetId                    controllers.api.ValueController.good(tweetId: String)
 PUT         /api/value/bad/:tweetId                     controllers.api.ValueController.bad(tweetId: String)
+DELETE      /api/value/cancel/:tweetId                  controllers.api.ValueController.cancel(tweetId: String)
 
 # Resource
 GET         /assets/*file                               controllers.Assets.versioned(path="/public", file: Asset)

@@ -63,6 +63,10 @@
           sawitter.obs.trigger("hideModal");
         }
       });
-    }
+    };
+
+    sawitter.obs.on("onReadyPost", () => {
+      this.tweetComment.focus();
+    });
   </script>
 </swt-tweet-comment>

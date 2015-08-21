@@ -20,6 +20,27 @@
       location: any;
     }
 
+    var API = {
+      auth: {
+        signUp:   "/api/auth/signup",
+        signIn:   "/api/auth/signin",
+        signOut:  "/api/auth/signout"
+      },
+      timeline: {
+        home:     "/api/timeline/home"
+      },
+      tweet: {
+        tweet:    "/api/tweet/tweet"
+      },
+      value: {
+        count:    "/api/value/count/",
+        good:     "/api/value/good/",
+        bad:      "/api/value/bad/",
+        cancel:   "/api/value/cancel/"
+      },
+      contents:   "/api/contents/"
+    };
+
     // ===================================================================================
     //                                                                          Attributes
     //                                                                          ==========
@@ -34,6 +55,10 @@
     //                                                                               Logic
     //                                                                               =====
 
+    this.showErrorMessage = (title, json) => {
+      alert(title + "\n" + json.reason);
+    }
+
     this.doSignUp = (mail, password, passwordConfirm) => {
       // empty validate
       if (mail.isEmpty || password.isEmpty || passwordConfirm.isEmpty) {
@@ -42,15 +67,15 @@
 
       // sign up
       request
-        .post("api/auth/signup")
+        .post(API.auth.signUp)
         .send({mail: mail, password: password, passwordConfirm: passwordConfirm})
         .set('Accept', 'application/json')
         .end((error, response) => {
           if (response.ok) {
+            alert("登録されたメールアドレスへ確認メールを送信しました。");
             location.reload();
           } else {
-            var result = JSON.parse(response.text);
-            console.log(result.reason);
+            this.showErrorMessage("登録に失敗しました。", JSON.parse(response.text));
           }
         })
     };
@@ -63,7 +88,7 @@
 
       // sign in
       request
-        .post("api/auth/signin")
+        .post(API.auth.signIn)
         .withCredentials()
         .send({mail: mail, password: password})
         .set('Accept', 'application/json')
@@ -71,19 +96,20 @@
           if (response.ok) {
             location.reload();
           } else {
-            var result = JSON.parse(response.text);
-            console.log(result.reason);
+            alert("サインアウトに失敗しました。もうしばらく待ってから、もう一度お願いします");
           }
         });
     };
 
     this.doSignOut = () => {
       request
-        .post("/api/auth/signout")
+        .post(API.auth.signOut)
         .withCredentials()
         .end((error, response) => {
           if (response.ok) {
             location.href = "/";
+          } else {
+            this.showErrorMessage("サインインに失敗しました。", JSON.parse(response.text));
           }
         });
     };
@@ -91,7 +117,7 @@
     this.findTimeline = (before, after) => {
 
       // set url parameter
-      var url = "/api/timeline/home";
+      var url = API.timeline.home;
       var existsParameter = false;
       var addParameter = (key, value) => {
           if (!existsParameter) {
@@ -115,50 +141,81 @@
         .get(url)
         .withCredentials()
         .end((error, response) => {
+          var json = JSON.parse(response.text);
           if (response.ok) {
-            var timeline = JSON.parse(response.text).value;
-            this.obs.trigger("onLoadTimeline", timeline);
+            this.obs.trigger("onLoadTimeline", json.value);
           }
         });
     };
 
     this.doPost = (url, comment) => {
       request
-        .post("/api/tweet/tweet")
+        .post(API.tweet.tweet)
         .send({url: url, comment: comment})
         .set('Accept', 'application/json')
         .end((error, response) => {
+          var json = JSON.parse(response.text);
           if (response.ok) {
             this.obs.trigger("onPosted");
+          } else {
+            this.showErrorMessage("ツイートの投稿に失敗しました。", json);
           }
         });
     };
 
     this.putGood = tweetId => {
       request
-        .put("/api/value/good/" + tweetId)
+        .put(API.value.good + tweetId)
         .end((error, response) => {
+          var json = JSON.parse(response.text);
           if (response.ok) {
-            var valueCount = JSON.parse(response.text).value;
-            this.obs.trigger("onValueUpdated", {tweetId: tweetId, value: valueCount});
+            this.obs.trigger("onValueUpdate", {tweetId: tweetId});
+          } else {
+            this.showErrorMessage("評価に失敗しました。", json);
           }
         });
     };
 
     this.putBad = tweetId => {
       request
-        .put("/api/value/bad/" + tweetId)
+        .put(API.value.bad + tweetId)
         .end((error, response) => {
+          var json = JSON.parse(response.text);
           if (response.ok) {
-            var valueCount = JSON.parse(response.text).value;
-            this.obs.trigger("onValueUpdated", {tweetId: tweetId, value: valueCount});
+            this.obs.trigger("onValueUpdate", {tweetId: tweetId});
+          } else {
+            this.showErrorMessage("評価に失敗しました。", json);
+          }
+        });
+    };
+
+    this.putCancel = tweetId => {
+      request
+        .del(API.value.cancel + tweetId)
+        .end((error, response) => {
+          var json = JSON.parse(response.text)
+          if (response.ok) {
+            this.obs.trigger("onValueUpdate", {tweetId: tweetId});
+          } else {
+            this.showErrorMessage("評価の取消に失敗しました。", json);
+          }
+        })
+    };
+
+    this.reloadValue = tweetId => {
+      request
+        .get(API.value.count + tweetId)
+        .end((error, response) => {
+          var json = JSON.parse(response.text)
+          if (response.ok) {
+            this.obs.trigger("onValueReload", {tweetId: tweetId, value: json.value});
           }
         });
     };
 
     this.findContentsDetail = shareContentsId => {
       request
-        .get("/api/contents/" + shareContentsId)
+        .get(API.contents + shareContentsId)
         .end((error, response) => {
           if (response.ok) {
             var contents = JSON.parse(response.text).value;

@@ -2,6 +2,26 @@ riot.tag('swt-common', '', function(opts) {// ==================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
+var API = {
+    auth: {
+        signUp: "/api/auth/signup",
+        signIn: "/api/auth/signin",
+        signOut: "/api/auth/signout"
+    },
+    timeline: {
+        home: "/api/timeline/home"
+    },
+    tweet: {
+        tweet: "/api/tweet/tweet"
+    },
+    value: {
+        count: "/api/value/count/",
+        good: "/api/value/good/",
+        bad: "/api/value/bad/",
+        cancel: "/api/value/cancel/"
+    },
+    contents: "/api/contents/"
+};
 // ===================================================================================
 //                                                                          Attributes
 //                                                                          ==========
@@ -13,6 +33,9 @@ this.currentKeyCodes = [];
 // ===================================================================================
 //                                                                               Logic
 //                                                                               =====
+this.showErrorMessage = function (title, json) {
+    alert(title + "\n" + json.reason);
+};
 this.doSignUp = function (mail, password, passwordConfirm) {
     // empty validate
     if (mail.isEmpty || password.isEmpty || passwordConfirm.isEmpty) {
@@ -20,16 +43,16 @@ this.doSignUp = function (mail, password, passwordConfirm) {
     }
     // sign up
     request
-        .post("api/auth/signup")
+        .post(API.auth.signUp)
         .send({ mail: mail, password: password, passwordConfirm: passwordConfirm })
         .set('Accept', 'application/json')
         .end(function (error, response) {
         if (response.ok) {
+            alert("登録されたメールアドレスへ確認メールを送信しました。");
             location.reload();
         }
         else {
-            var result = JSON.parse(response.text);
-            console.log(result.reason);
+            _this.showErrorMessage("登録に失敗しました。", JSON.parse(response.text));
         }
     });
 };
@@ -40,7 +63,7 @@ this.doSignIn = function (mail, password) {
     }
     // sign in
     request
-        .post("api/auth/signin")
+        .post(API.auth.signIn)
         .withCredentials()
         .send({ mail: mail, password: password })
         .set('Accept', 'application/json')
@@ -49,24 +72,26 @@ this.doSignIn = function (mail, password) {
             location.reload();
         }
         else {
-            var result = JSON.parse(response.text);
-            console.log(result.reason);
+            alert("サインアウトに失敗しました。もうしばらく待ってから、もう一度お願いします");
         }
     });
 };
 this.doSignOut = function () {
     request
-        .post("/api/auth/signout")
+        .post(API.auth.signOut)
         .withCredentials()
         .end(function (error, response) {
         if (response.ok) {
             location.href = "/";
         }
+        else {
+            _this.showErrorMessage("サインインに失敗しました。", JSON.parse(response.text));
+        }
     });
 };
 this.findTimeline = function (before, after) {
     // set url parameter
-    var url = "/api/timeline/home";
+    var url = API.timeline.home;
     var existsParameter = false;
     var addParameter = function (key, value) {
         if (!existsParameter) {
@@ -89,46 +114,79 @@ this.findTimeline = function (before, after) {
         .get(url)
         .withCredentials()
         .end(function (error, response) {
+        var json = JSON.parse(response.text);
         if (response.ok) {
-            var timeline = JSON.parse(response.text).value;
-            _this.obs.trigger("onLoadTimeline", timeline);
+            _this.obs.trigger("onLoadTimeline", json.value);
         }
     });
 };
 this.doPost = function (url, comment) {
     request
-        .post("/api/tweet/tweet")
+        .post(API.tweet.tweet)
         .send({ url: url, comment: comment })
         .set('Accept', 'application/json')
         .end(function (error, response) {
+        var json = JSON.parse(response.text);
         if (response.ok) {
             _this.obs.trigger("onPosted");
+        }
+        else {
+            _this.showErrorMessage("ツイートの投稿に失敗しました。", json);
         }
     });
 };
 this.putGood = function (tweetId) {
     request
-        .put("/api/value/good/" + tweetId)
+        .put(API.value.good + tweetId)
         .end(function (error, response) {
+        var json = JSON.parse(response.text);
         if (response.ok) {
-            var valueCount = JSON.parse(response.text).value;
-            _this.obs.trigger("onValueUpdated", { tweetId: tweetId, value: valueCount });
+            _this.obs.trigger("onValueUpdate", { tweetId: tweetId });
+        }
+        else {
+            _this.showErrorMessage("評価に失敗しました。", json);
         }
     });
 };
 this.putBad = function (tweetId) {
     request
-        .put("/api/value/bad/" + tweetId)
+        .put(API.value.bad + tweetId)
         .end(function (error, response) {
+        var json = JSON.parse(response.text);
         if (response.ok) {
-            var valueCount = JSON.parse(response.text).value;
-            _this.obs.trigger("onValueUpdated", { tweetId: tweetId, value: valueCount });
+            _this.obs.trigger("onValueUpdate", { tweetId: tweetId });
+        }
+        else {
+            _this.showErrorMessage("評価に失敗しました。", json);
+        }
+    });
+};
+this.putCancel = function (tweetId) {
+    request
+        .del(API.value.cancel + tweetId)
+        .end(function (error, response) {
+        var json = JSON.parse(response.text);
+        if (response.ok) {
+            _this.obs.trigger("onValueUpdate", { tweetId: tweetId });
+        }
+        else {
+            _this.showErrorMessage("評価の取消に失敗しました。", json);
+        }
+    });
+};
+this.reloadValue = function (tweetId) {
+    request
+        .get(API.value.count + tweetId)
+        .end(function (error, response) {
+        var json = JSON.parse(response.text);
+        if (response.ok) {
+            _this.obs.trigger("onValueReload", { tweetId: tweetId, value: json.value });
         }
     });
 };
 this.findContentsDetail = function (shareContentsId) {
     request
-        .get("/api/contents/" + shareContentsId)
+        .get(API.contents + shareContentsId)
         .end(function (error, response) {
         if (response.ok) {
             var contents = JSON.parse(response.text).value;

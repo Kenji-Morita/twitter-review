@@ -34,7 +34,6 @@
   </div>
 
   <script>
-    /// <reference path="../typescript/hello.ts"/>
     // ===================================================================================
     //                                                                             Declare
     //                                                                             =======
@@ -96,6 +95,25 @@
 
     sawitter.obs.on("onPosted", () => {
       setTimeout(callFindTimeline, 100);
+    });
+
+    sawitter.obs.on("onValueUpdate", result => {
+      setTimeout(() => {
+        sawitter.reloadValue(result.tweetId);
+      }, 1000);
+    });
+
+    sawitter.obs.on("onValueReload", result => {
+      this.tweets = _
+        .chain(this.tweets)
+        .map(t => {
+          if (t.tweet.tweetId == result.tweetId) {
+            t.value = result.value;
+          }
+          return t;
+        })
+        .value();
+      this.update();
     });
 
     // ===================================================================================
