@@ -29,16 +29,18 @@
       </section>
     </li>
   </ul>
-  <div>
-    <button onclick={findPastTweet}>過去のつぶやきを取得</button>
+  <div class="sg-contents-timeline-past">
+    <button onclick={findPastTweet}>さらに20件取得</button>
   </div>
 
   <script>
+    /// <reference path="../typescript/hello.ts"/>
     // ===================================================================================
     //                                                                             Declare
     //                                                                             =======
 
     declare var sawitter: any;
+    declare var _: any;
 
     // ===================================================================================
     //                                                                          Attributes
@@ -64,12 +66,17 @@
 
     this.findPastTweet = e => {
       e.preventDefault();
-      // 最後のツイートIDを渡す
-      // sawitter.findPastTweet();
+      sawitter.findTimeline(this.tweets[this.tweets.length - 1].tweet.timestamp, null);
     }
 
     sawitter.obs.on("onLoadTimeline", timeline => {
-      this.tweets = timeline;
+      this.tweets = _
+        .chain(this.tweets)
+        .union(timeline)
+        .uniq(t => {
+          return t.tweet.tweetId;
+        })
+        .value();
       this.update();
     });
 
@@ -97,7 +104,7 @@
 
     var callFindTimeline = () => {
       if (this.tweets.length > 0) {
-        sawitter.findTimeline(null, this.tweets[0].timestamp);
+        sawitter.findTimeline(null, this.tweets[0].tweet.timestamp);
       } else {
         sawitter.findTimeline();
       }

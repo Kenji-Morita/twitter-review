@@ -27,9 +27,7 @@ object TimelineModel {
   //                                                                                ====
 
   def findAll(loginMemberOpt: Option[Member], before: Long, after: Long): Future[List[TimelineObject]] = ElasticsearchUtil.process { client =>
-    // TODO 過去のGood/Badからいい感じにフィルタリングする
-    // とりあえず全部取得
-    client.execute(search in "twitter/tweet" fields "_timestamp" fields "_source" query {
+    client.execute(search in "twitter/tweet" fields "_timestamp" fields "_source" size 20 query {
       filteredQuery filter {
         andFilter(
             termFilter("deleted", false),

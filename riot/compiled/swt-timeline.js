@@ -1,4 +1,5 @@
-riot.tag('swt-timeline', '<ul class="sg-contents-timeline {sg-contents-timeline-detail: isDetail}"><li each="{tweets}"><section><dl class="sg-contents-timeline-share"><dt><a href="/content/{shareContents.shareContentsId}" onclick="{onClickDetail}"><img riot-src="{shareContents.thumbnailUrl}" alt="{shareContents.title}"></a></dt><dd><h1><a href="/content/{shareContents.shareContentsId}" onclick="{onClickDetail}"> {shareContents.title} </a></h1></dd></dl><dl class="sg-contents-timeline-comment"><dt><i class="fa fa-user fa-2x"></i></dt><dd><p>{tweet.comment}</p><time>{tweet.postedAt}</time></dd></dl><swt-value-btns value="{value}" tweetid="{tweet.tweetId}"></swt-value-btns></section></li></ul>', function(opts) {// ===================================================================================
+riot.tag('swt-timeline', '<ul class="sg-contents-timeline {sg-contents-timeline-detail: isDetail}"><li each="{tweets}"><section><dl class="sg-contents-timeline-share"><dt><a href="/content/{shareContents.shareContentsId}" onclick="{onClickDetail}"><img riot-src="{shareContents.thumbnailUrl}" alt="{shareContents.title}"></a></dt><dd><h1><a href="/content/{shareContents.shareContentsId}" onclick="{onClickDetail}"> {shareContents.title} </a></h1></dd></dl><dl class="sg-contents-timeline-comment"><dt><i class="fa fa-user fa-2x"></i></dt><dd><p>{tweet.comment}</p><time>{tweet.postedAt}</time></dd></dl><swt-value-btns value="{value}" tweetid="{tweet.tweetId}"></swt-value-btns></section></li></ul><div class="sg-contents-timeline-past"><button onclick="{findPastTweet}">さらに20件取得</button></div>', function(opts) {/// <reference path="../typescript/hello.ts"/>
+// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
@@ -20,8 +21,18 @@ this.onClickDetail = function (e) {
     var shareContentsId = e.item.shareContents.shareContentsId;
     sawitter.showDetail(shareContentsId);
 };
+this.findPastTweet = function (e) {
+    e.preventDefault();
+    sawitter.findTimeline(_this.tweets[_this.tweets.length - 1].tweet.timestamp, null);
+};
 sawitter.obs.on("onLoadTimeline", function (timeline) {
-    _this.tweets = timeline;
+    _this.tweets = _
+        .chain(_this.tweets)
+        .union(timeline)
+        .uniq(function (t) {
+        return t.tweet.tweetId;
+    })
+        .value();
     _this.update();
 });
 sawitter.obs.on("showDetail", function () {
@@ -43,7 +54,7 @@ sawitter.obs.on("onPosted", function () {
 //                                                                               =====
 var callFindTimeline = function () {
     if (_this.tweets.length > 0) {
-        sawitter.findTimeline(null, _this.tweets[0].timestamp);
+        sawitter.findTimeline(null, _this.tweets[0].tweet.timestamp);
     }
     else {
         sawitter.findTimeline();

@@ -13,10 +13,10 @@
         <footer class="sg-contents-modal-contents-footer">
           <ul>
             <li>
-              <button onclick={onOk}>{contents.okButtonMsg}</button>
+              <button onclick={onOk} class="sg-contents-modal-btn-ok">{contents.okButtonMsg}</button>
             </li>
             <li>
-              <button onclick={onNg}>{contents.ngButtonMsg}</button>
+              <button onclick={onNg} class="sg-contents-modal-btn-ng">{contents.ngButtonMsg}</button>
             </li>
           </ul>
         </footer>

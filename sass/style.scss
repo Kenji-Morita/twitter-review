@@ -3,25 +3,27 @@
 //                                                                            Variable
 //                                                                            ========
 
-$font-size-small    : 10px;
-$font-size-middle   : 14px;
-$font-size-large    : 18px;
+$font-size-small        : 10px;
+$font-size-middle       : 14px;
+$font-size-large        : 18px;
 
-$color-theme        : #607D8B;  // DONE
-$color-theme-sub    : #CFD8DC;  // DONE
-$color-accent       : #FF9800;  // DONE
-$color-bg           : #CFD8DC;  // DONE
-$color-bg-light     : #FFFFFF;  // DONE
-$color-bg-modal     : rgba(0, 0, 0, 0.7);
-$color-text         : #727272;  // DONE
-$color-text-light   : #FFFFFF;  // DONE
-$color-link         : #999;
-$color-link-hover   : #ccc;
-$color-border       : #ccc;
-$color-good         : #CDDC39;
-$color-good-hover   : #CDDC89;
-$color-bad          : #ccc;
-$color-bad-hover    : #DEDEDE;
+$color-theme            : #607D8B;
+$color-theme-sub        : #CFD8DC;
+$color-accent           : #FF9800;
+$color-bg               : #CFD8DC;
+$color-bg-light         : #FFFFFF;
+$color-bg-modal         : rgba(0, 0, 0, 0.7);
+$color-text             : #727272;
+$color-text-light       : #FFFFFF;
+$color-link             : #999;
+$color-link-hover       : #ccc;
+$color-border           : #ccc;
+$color-good             : #CDDC39;
+$color-good-hover       : #CDDC89;
+$color-primary          : #5bc0de;
+$color-primary-hover    : #7BD2DE;
+$color-bad              : #ccc;
+$color-bad-hover        : #DEDEDE;
 
 $width-container-micro  : 480px;
 $width-container-small  : 590px;
@@ -29,16 +31,16 @@ $width-container-middle : 720px;
 $width-container-large  : 960px;
 $width-half-percent     : 50%;
 
-$margin-micro       : 5px;
-$margin-small       : 10px;
-$margin-middle      : 50px;
-$margin-large       : 100px;
+$margin-micro           : 5px;
+$margin-small           : 10px;
+$margin-middle          : 50px;
+$margin-large           : 100px;
 
-$round-param        : 5px;
+$round-param            : 5px;
 
-$icon-size          : 32px;
+$icon-size              : 32px;
 
-$border-common      : 1px solid $color-border;
+$border-common          : 1px solid $color-border;
 
 // ===================================================================================
 //                                                                               Mixin
@@ -56,6 +58,12 @@ $border-common      : 1px solid $color-border;
   width: $width-container-small - $margin-small * 2;
   padding: $margin-small;
   margin: 0 auto $margin-small;
+}
+
+@mixin btn-round {
+  border: none;
+  border-radius: $round-param;
+  transition: all 0.2s ease;
 }
 
 // ===================================================================================
@@ -88,6 +96,7 @@ p {
 .sg-container {
   width: $width-container-large;
   margin: 0 auto;
+  transition: all 0.2s ease;
 }
 
 // ===================================================================================
@@ -110,6 +119,8 @@ p {
     float: left;
 
     & h1 {
+
+      margin-left: 5px;
 
       & a {
         color: $color-text-light;
@@ -159,6 +170,15 @@ p {
         display: table-cell;
         vertical-align: center;
         text-align: center;
+      }
+    }
+
+    & button {
+      @include btn-round;
+      background: #fff;
+
+      &:hover {
+        color: $color-accent;
       }
     }
   }
@@ -228,7 +248,18 @@ p {
       text-align: right;
 
       & button {
+        @include btn-round;
+        background: $color-good;
+        color: $color-text-light;
         margin-left: $margin-small;
+
+        &:hover {
+          background: $color-good-hover;
+        }
+
+        &[disabled="disabled"] {
+          background: $color-bad;
+        }
       }
 
       & .sg-contents-tweet-submit-invalid {
@@ -294,6 +325,24 @@ p {
     & > * {
       display: table-cell;
       text-align: center;
+    }
+
+    & button {
+      @include btn-round;
+      background: $color-bad;
+      color: $color-text-light;
+
+      &:hover {
+        background: $color-bad-hover;
+      }
+
+      &.sg-contents-timeline-sort-active {
+        background: $color-primary;
+
+        &:hover {
+          background: $color-primary-hover;
+        }
+      }
     }
   }
 
@@ -363,6 +412,24 @@ p {
 
       &:hover span {
         opacity: 1;
+      }
+    }
+  }
+
+  & .sg-contents-timeline-past {
+    @include contents-base;
+    text-align: center;
+
+    & button {
+      @include btn-round;
+      background: #fff;
+
+      &:hover {
+        color: $color-accent;
+      }
+
+      &:active, &:visited {
+        border: none;
       }
     }
   }
@@ -465,6 +532,26 @@ p {
           text-align: center;
         }
       }
+    }
+  }
+
+  & .sg-contents-modal-btn-ok {
+    @include btn-round;
+    color: $color-text-light;
+    background: $color-good;
+
+    &:hover {
+      background: $color-good-hover;
+    }
+  }
+
+  & .sg-contents-modal-btn-ng {
+    @include btn-round;
+    color: $color-text-light;
+    background: $color-bad;
+
+    &:hover {
+      background: $color-bad-hover;
     }
   }
 }

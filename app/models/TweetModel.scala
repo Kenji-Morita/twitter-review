@@ -70,7 +70,7 @@ object TweetModel {
   }
 
   def findByShareContentsIds(shareContentsId: String): Future[List[Tweet]] = ElasticsearchUtil.process { client =>
-    client.execute(search in "twitter/tweet" fields "_timestamp" fields "_source" size 20 query {
+    client.execute(search in "twitter/tweet" fields "_timestamp" fields "_source" size 10 query {
       filteredQuery filter {
         andFilter(
           termFilter("shareContentsId", shareContentsId),

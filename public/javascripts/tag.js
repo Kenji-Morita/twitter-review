@@ -212,7 +212,7 @@ sawitter.obs.on("hideModal", function () {
 riot.tag('swt-cover', '<div class="sg-contents-cover"><ul></ul></div>', function(opts) {
 });
 
-riot.tag('swt-detail', '<div class="sg-contents-detail"><section><header><h1><a href="{contents.shareContents.url}" target="_blank">{contents.shareContents.title}</a></h1><p>{contents.shareContents.url}</p></header><swt-tweet-comment if="{sawitter.isLogin}" url="{contents.shareContents.url}"></swt-tweet-comment><ul class="sg-contents-timeline-sort"><li><button onclick="{sortByNew}">新着順</button></li><li><button onclick="{sortByGood}">Good順</button></li><li><button onclick="{sortByBad}">Bad順</button></li></ul><ul class="sg-contents-timeline"><li each="{contents.tweets}"><section><dl class="sg-contents-timeline-comment"><dt><img alt="icon" riot-src="data:image/png;base64,{generateIcon(identityHash)}"></dt><dd><p>{tweet.comment}</p><time>{tweet.postedAt}</time></dd></dl><swt-value-btns value="{value}" tweetid="{tweet.tweetId}"></swt-value-btns></section></li></ul></section></div>', function(opts) {// ===================================================================================
+riot.tag('swt-detail', '<div class="sg-contents-detail"><section><header><h1><a href="{contents.shareContents.url}" target="_blank">{contents.shareContents.title}</a></h1><p>{contents.shareContents.url}</p></header><swt-tweet-comment if="{sawitter.isLogin}" url="{contents.shareContents.url}"></swt-tweet-comment><ul class="sg-contents-timeline-sort"><li><button onclick="{sortByNew}" class="{sg-contents-timeline-sort-active: sortMode == 0}">新着順</button></li><li><button onclick="{sortByGood}" class="{sg-contents-timeline-sort-active: sortMode == 1}">Good順</button></li><li><button onclick="{sortByBad}" class="{sg-contents-timeline-sort-active: sortMode == 2}">Bad順</button></li></ul><ul class="sg-contents-timeline"><li each="{contents.tweets}"><section><dl class="sg-contents-timeline-comment"><dt><img alt="icon" riot-src="data:image/png;base64,{generateIcon(identityHash)}"></dt><dd><p>{tweet.comment}</p><time>{tweet.postedAt}</time></dd></dl><swt-value-btns value="{value}" tweetid="{tweet.tweetId}"></swt-value-btns></section></li></ul></section></div>', function(opts) {// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
@@ -387,7 +387,7 @@ sawitter.obs.on("onContentsLoaded", function (contents) {
 
 });
 
-riot.tag('swt-modal', '<div class="sg-contents-modal"><div class="{sg-contents-modal-bg: isShowModal}" onclick="{closeModal}"></div><div if="{isShowModal}" class="sg-contents-modal-contents"><section><header class="sg-contents-modal-contents-header"><h1>{contents.title}</h1></header><div if="{contents.raw != null}" name="raw" class="sg-contents-modal-contents-raw"></div><div if="{contents.msg != null}">{contents.msg}</div><div if="{contents.msgSub != null}" class="sg-contents-modal-contents-msg-sub">{contents.msgSub}</div><footer class="sg-contents-modal-contents-footer"><ul><li><button onclick="{onOk}">{contents.okButtonMsg}</button></li><li><button onclick="{onNg}">{contents.ngButtonMsg}</button></li></ul></footer></section></div></div>', function(opts) {// ===================================================================================
+riot.tag('swt-modal', '<div class="sg-contents-modal"><div class="{sg-contents-modal-bg: isShowModal}" onclick="{closeModal}"></div><div if="{isShowModal}" class="sg-contents-modal-contents"><section><header class="sg-contents-modal-contents-header"><h1>{contents.title}</h1></header><div if="{contents.raw != null}" name="raw" class="sg-contents-modal-contents-raw"></div><div if="{contents.msg != null}">{contents.msg}</div><div if="{contents.msgSub != null}" class="sg-contents-modal-contents-msg-sub">{contents.msgSub}</div><footer class="sg-contents-modal-contents-footer"><ul><li><button onclick="{onOk}" class="sg-contents-modal-btn-ok">{contents.okButtonMsg}</button></li><li><button onclick="{onNg}" class="sg-contents-modal-btn-ng">{contents.ngButtonMsg}</button></li></ul></footer></section></div></div>', function(opts) {// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
@@ -428,7 +428,8 @@ sawitter.obs.on("hideModal", function () {
 
 });
 
-riot.tag('swt-timeline', '<ul class="sg-contents-timeline {sg-contents-timeline-detail: isDetail}"><li each="{tweets}"><section><dl class="sg-contents-timeline-share"><dt><a href="/content/{shareContents.shareContentsId}" onclick="{onClickDetail}"><img riot-src="{shareContents.thumbnailUrl}" alt="{shareContents.title}"></a></dt><dd><h1><a href="/content/{shareContents.shareContentsId}" onclick="{onClickDetail}"> {shareContents.title} </a></h1></dd></dl><dl class="sg-contents-timeline-comment"><dt><i class="fa fa-user fa-2x"></i></dt><dd><p>{tweet.comment}</p><time>{tweet.postedAt}</time></dd></dl><swt-value-btns value="{value}" tweetid="{tweet.tweetId}"></swt-value-btns></section></li></ul>', function(opts) {// ===================================================================================
+riot.tag('swt-timeline', '<ul class="sg-contents-timeline {sg-contents-timeline-detail: isDetail}"><li each="{tweets}"><section><dl class="sg-contents-timeline-share"><dt><a href="/content/{shareContents.shareContentsId}" onclick="{onClickDetail}"><img riot-src="{shareContents.thumbnailUrl}" alt="{shareContents.title}"></a></dt><dd><h1><a href="/content/{shareContents.shareContentsId}" onclick="{onClickDetail}"> {shareContents.title} </a></h1></dd></dl><dl class="sg-contents-timeline-comment"><dt><i class="fa fa-user fa-2x"></i></dt><dd><p>{tweet.comment}</p><time>{tweet.postedAt}</time></dd></dl><swt-value-btns value="{value}" tweetid="{tweet.tweetId}"></swt-value-btns></section></li></ul><div class="sg-contents-timeline-past"><button onclick="{findPastTweet}">さらに20件取得</button></div>', function(opts) {/// <reference path="../typescript/hello.ts"/>
+// ===================================================================================
 //                                                                             Declare
 //                                                                             =======
 var _this = this;
@@ -450,8 +451,18 @@ this.onClickDetail = function (e) {
     var shareContentsId = e.item.shareContents.shareContentsId;
     sawitter.showDetail(shareContentsId);
 };
+this.findPastTweet = function (e) {
+    e.preventDefault();
+    sawitter.findTimeline(_this.tweets[_this.tweets.length - 1].tweet.timestamp, null);
+};
 sawitter.obs.on("onLoadTimeline", function (timeline) {
-    _this.tweets = timeline;
+    _this.tweets = _
+        .chain(_this.tweets)
+        .union(timeline)
+        .uniq(function (t) {
+        return t.tweet.tweetId;
+    })
+        .value();
     _this.update();
 });
 sawitter.obs.on("showDetail", function () {
@@ -473,7 +484,7 @@ sawitter.obs.on("onPosted", function () {
 //                                                                               =====
 var callFindTimeline = function () {
     if (_this.tweets.length > 0) {
-        sawitter.findTimeline(null, _this.tweets[0].timestamp);
+        sawitter.findTimeline(null, _this.tweets[0].tweet.timestamp);
     }
     else {
         sawitter.findTimeline();

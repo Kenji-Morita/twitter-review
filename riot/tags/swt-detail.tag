@@ -8,13 +8,13 @@
       <swt-tweet-comment if={sawitter.isLogin} url={contents.shareContents.url}></swt-tweet-comment>
       <ul class="sg-contents-timeline-sort">
         <li>
-          <button onclick={sortByNew}>新着順</button>
+          <button onclick={sortByNew} class={sg-contents-timeline-sort-active: sortMode == 0}>新着順</button>
         </li>
         <li>
-          <button onclick={sortByGood}>Good順</button>
+          <button onclick={sortByGood} class={sg-contents-timeline-sort-active: sortMode == 1}>Good順</button>
         </li>
         <li>
-          <button onclick={sortByBad}>Bad順</button>
+          <button onclick={sortByBad} class={sg-contents-timeline-sort-active: sortMode == 2}>Bad順</button>
         </li>
       </ul>
       <ul class="sg-contents-timeline">
