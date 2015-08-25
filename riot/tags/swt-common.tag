@@ -96,7 +96,7 @@
           if (response.ok) {
             location.reload();
           } else {
-            alert("サインアウトに失敗しました。もうしばらく待ってから、もう一度お願いします");
+            this.showErrorMessage("サインインに失敗しました。", JSON.parse(response.text));
           }
         });
     };
@@ -109,7 +109,7 @@
           if (response.ok) {
             location.href = "/";
           } else {
-            this.showErrorMessage("サインインに失敗しました。", JSON.parse(response.text));
+            alert("サインアウトに失敗しました。もうしばらく待ってから、もう一度お願いします");
           }
         });
     };

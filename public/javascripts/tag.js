@@ -72,7 +72,7 @@ this.doSignIn = function (mail, password) {
             location.reload();
         }
         else {
-            alert("サインアウトに失敗しました。もうしばらく待ってから、もう一度お願いします");
+            _this.showErrorMessage("サインインに失敗しました。", JSON.parse(response.text));
         }
     });
 };
@@ -85,7 +85,7 @@ this.doSignOut = function () {
             location.href = "/";
         }
         else {
-            _this.showErrorMessage("サインインに失敗しました。", JSON.parse(response.text));
+            alert("サインアウトに失敗しました。もうしばらく待ってから、もう一度お願いします");
         }
     });
 };
@@ -267,7 +267,7 @@ sawitter.obs.on("hideModal", function () {
 
 });
 
-riot.tag('swt-cover', '<div class="sg-contents-cover"><ul></ul></div>', function(opts) {
+riot.tag('swt-cover', '<div class="sg-contents-cover"><ul><section><h1>Sawitter</h1><p>匿名でコメントを楽しもう</p></section></ul></div>', function(opts) {
 });
 
 riot.tag('swt-detail', '<div class="sg-contents-detail"><section><header><h1><a href="{contents.shareContents.url}" target="_blank">{contents.shareContents.title}</a></h1><p>{contents.shareContents.url}</p></header><swt-tweet-comment if="{sawitter.isLogin}" url="{contents.shareContents.url}"></swt-tweet-comment><ul class="sg-contents-timeline-sort"><li><button onclick="{sortByNew}" class="{sg-contents-timeline-sort-active: sortMode == 0}">新着順</button></li><li><button onclick="{sortByGood}" class="{sg-contents-timeline-sort-active: sortMode == 1}">Good順</button></li><li><button onclick="{sortByBad}" class="{sg-contents-timeline-sort-active: sortMode == 2}">Bad順</button></li></ul><ul class="sg-contents-timeline"><li each="{contents.tweets}"><section><dl class="sg-contents-timeline-comment"><dt><img alt="icon" riot-src="data:image/png;base64,{generateIcon(identityHash)}"></dt><dd><p>{tweet.comment}</p><time>{tweet.postedAt}</time></dd></dl><swt-value-btns value="{value}" tweetid="{tweet.tweetId}"></swt-value-btns></section></li></ul></section></div>', function(opts) {// ===================================================================================

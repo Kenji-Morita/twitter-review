@@ -6,6 +6,7 @@
 $font-size-small        : 10px;
 $font-size-middle       : 14px;
 $font-size-large        : 18px;
+$font-size-xxxlarge     : 92px;
 
 $color-theme            : #607D8B;
 $color-theme-sub        : #CFD8DC;
@@ -195,6 +196,20 @@ p {
   background-color: $color-theme;
   margin-top: -11px;
   margin-bottom: $margin-middle;
+  text-align: center;
+
+  & h1 {
+    color: $color-text-light;
+    font-size: $font-size-xxxlarge;
+    padding-top: $margin-large;
+  }
+
+  & p {
+    color: $color-text-light;
+    opacity: 0.8;
+    font-size: $font-size-large;
+    padding-top: $margin-small * -1;
+  }
 }
 
 .sg-contents {

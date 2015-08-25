@@ -82,7 +82,17 @@ p {
   width: 100%;
   background-color: #607D8B;
   margin-top: -11px;
-  margin-bottom: 50px; }
+  margin-bottom: 50px;
+  text-align: center; }
+  .sg-contents-cover h1 {
+    color: #FFFFFF;
+    font-size: 92px;
+    padding-top: 100px; }
+  .sg-contents-cover p {
+    color: #FFFFFF;
+    opacity: 0.8;
+    font-size: 18px;
+    padding-top: -10px; }
 
 .sg-contents {
   width: 100%;

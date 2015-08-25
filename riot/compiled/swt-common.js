@@ -72,7 +72,7 @@ this.doSignIn = function (mail, password) {
             location.reload();
         }
         else {
-            alert("サインアウトに失敗しました。もうしばらく待ってから、もう一度お願いします");
+            _this.showErrorMessage("サインインに失敗しました。", JSON.parse(response.text));
         }
     });
 };
@@ -85,7 +85,7 @@ this.doSignOut = function () {
             location.href = "/";
         }
         else {
-            _this.showErrorMessage("サインインに失敗しました。", JSON.parse(response.text));
+            alert("サインアウトに失敗しました。もうしばらく待ってから、もう一度お願いします");
         }
     });
 };
